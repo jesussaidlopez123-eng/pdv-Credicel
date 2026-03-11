@@ -3,280 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Credicel POS - V14.3 Matriz Sincronizada</title>
+    <title>Credicel POS V14.5 - Matriz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .product-card { transition: all 0.1s; border: 1px solid #e2e8f0; cursor: pointer; user-select: none; }
         .product-card:active { transform: scale(0.95); background-color: #eff6ff; }
         .blue-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
-        .sidebar { transition: transform 0.3s ease-in-out; width: 350px; position: fixed; top: 0; bottom: 0; left: 0; z-index: 300; background: white; border-right: 5px solid #1e3a8a; display: flex; flex-direction: column; }
+        .sidebar { transition: 0.3s; width: 350px; position: fixed; inset: 0 auto 0 0; z-index: 300; background: white; border-right: 5px solid #1e3a8a; }
         .sidebar.closed { transform: translateX(-100%); }
-        html, body { height: 100%; margin: 0; overflow: hidden; background: #f1f5f9; }
-        .app-container { display: flex; flex-direction: column; height: 100vh; }
-        .content-area { flex: 1; display: flex; overflow: hidden; }
-        .grid-area { flex: 1; overflow-y: auto; padding: 10px; padding-bottom: 150px; }
-        .cart-aside { width: 320px; display: flex; flex-direction: column; background: white; border-left: 1px solid #cbd5e1; height: 100%; }
-        .cart-header-fixed { background: #1e3a8a; padding: 12px; color: white; shrink-0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .cart-items-scroll { flex: 1; overflow-y: auto; padding: 8px; }
-        #loading-overlay { display: none; }
+        #loading { display: none; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 h-screen overflow-hidden flex flex-col font-sans">
 
-    <div id="loading-overlay" class="fixed inset-0 bg-blue-900/50 z-[400] flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-3xl font-black text-blue-900 animate-pulse uppercase text-center shadow-2xl">
-            CONECTANDO A MATRIZ...<br>
-            <span class="text-[10px] opacity-60 text-blue-700 tracking-widest uppercase">Actualizando Datos</span>
-        </div>
-    </div>
+    <div id="loading" class="fixed inset-0 bg-black/60 z-[500] flex items-center justify-center text-white font-black italic uppercase">Procesando Matriz...</div>
 
-    <div id="sidebar-corte" class="sidebar closed shadow-2xl p-6">
-        <div class="flex justify-between items-center mb-6 shrink-0">
-            <h2 class="font-black text-blue-900 uppercase text-lg italic border-b-4 border-yellow-400">Resumen del Turno</h2>
-            <button onclick="toggleCorte()" class="text-4xl font-bold text-slate-300 hover:text-red-500 transition">&times;</button>
-        </div>
-        <div id="lista-detalle-corte" class="flex-1 overflow-y-auto text-sm space-y-2 font-bold text-slate-600"></div>
-        <div class="shrink-0 pt-4 border-t">
-            <div class="p-4 bg-blue-900 rounded-2xl text-center text-yellow-400 font-black text-3xl mb-4 shadow-lg" id="corte-monto">$0.00</div>
-            <button onclick="ejecutarCorte()" class="w-full bg-red-600 text-white font-black py-5 rounded-2xl uppercase text-sm shadow-lg active:scale-95 transition-all">Cerrar Turno y Corte X</button>
-        </div>
-    </div>
-
-    <div id="login-screen" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-4">
-        <div class="max-w-sm w-full border p-10 rounded-[2.5rem] shadow-2xl bg-white text-center">
-            <div class="mb-8 font-black text-5xl text-blue-900 italic tracking-tighter">CREDI<span class="text-yellow-400">CEL</span></div>
-            <div class="space-y-4 text-left font-bold">
-                <label class="text-[10px] uppercase text-slate-400 ml-2 font-black">Vendedor</label>
-                <select id="user-select" class="w-full p-4 border-2 rounded-xl bg-slate-50 text-blue-900 outline-none focus:border-blue-500 transition"></select>
-                
-                <label class="text-[10px] uppercase text-slate-400 ml-2 font-black">Sucursal</label>
-                <select id="sucursal-select" class="w-full p-4 border-2 rounded-xl bg-slate-50 text-blue-900 outline-none focus:border-blue-500 transition">
-                    <option value="Navojoa">Navojoa</option>
-                    <option value="Huatabampo">Huatabampo</option>
-                    <option value="Bodega">Bodega</option>
-                </select>
-                
-                <label class="text-[10px] uppercase text-slate-400 ml-2 font-black">PIN</label>
-                <input id="user-pin" type="password" maxlength="6" inputmode="numeric" class="w-full p-4 border-2 rounded-xl text-center text-2xl tracking-[12px] focus:border-blue-500 outline-none" placeholder="****">
-                
-                <button onclick="intentarEntrar()" class="w-full blue-gradient text-white font-black py-5 rounded-2xl shadow-xl uppercase mt-4 active:scale-95 transition-all">Entrar</button>
+    <header class="blue-gradient p-2 text-white flex justify-between items-center shadow-lg">
+        <div class="flex gap-1">
+            <button onclick="toggleSidebar()" class="bg-yellow-400 text-blue-900 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-md">CORTE</button>
+            <div id="admin-tools" class="hidden flex gap-1">
+                <button onclick="ajusteInv('ENTRADA')" class="bg-blue-500 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm">Entrada</button>
+                <button onclick="ajusteInv('SALIDA')" class="bg-red-500 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm">Ajuste/Merma</button>
+                <button onclick="ajusteInv('TRASPASO')" class="bg-blue-500 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm">Traspaso</button>
             </div>
         </div>
-    </div>
-
-    <div id="main-app" class="hidden app-container">
-        <header class="blue-gradient text-white p-2 flex justify-between items-center shrink-0 shadow-md">
-            <div class="flex gap-2">
-                <button onclick="toggleCorte()" class="bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm">CORTE</button>
-                <button onclick="modalEquipo()" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm">EQUIPO</button>
-                <div id="admin-tools" class="hidden flex gap-1">
-                    <button onclick="ajusteInventario('ENTRADA')" class="bg-blue-500 text-white px-3 py-2 rounded-lg font-black text-[10px] uppercase border-l border-blue-400/50 shadow-sm">Entrada</button>
-                    <button onclick="ajusteInventario('TRASPASO')" class="bg-blue-500 text-white px-3 py-2 rounded-lg font-black text-[10px] uppercase border-l border-blue-400/50 shadow-sm">Traspaso</button>
-                </div>
-            </div>
-            <div class="text-right">
-                <div id="label-vendedor" class="font-black uppercase text-[10px] leading-none"></div>
-                <div id="label-sucursal" class="font-bold text-yellow-400 text-[8px] uppercase tracking-widest"></div>
-            </div>
-        </header>
-
-        <div class="content-area">
-            <main class="grid-area">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2" id="grid-productos"></div>
-            </main>
-            <aside class="cart-aside">
-                <div class="cart-header-fixed">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-black text-white uppercase opacity-70">Subtotal:</span>
-                        <span class="text-2xl font-black text-yellow-400">$<span id="total-venta">0.00</span></span>
-                    </div>
-                    <button onclick="irACobrar()" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl text-xl uppercase mb-2 shadow-lg active:scale-95 transition-all">COBRAR</button>
-                    <button onclick="carrito=[];actualizarCarrito()" class="w-full text-[9px] text-yellow-400 uppercase font-black underline">Limpiar Venta</button>
-                </div>
-                <div id="lista-carrito" class="cart-items-scroll space-y-2"></div>
-            </aside>
+        <div class="text-right uppercase font-black italic leading-none">
+            <div id="v-nom" class="text-[10px]"></div>
+            <div id="v-suc" class="text-yellow-400 text-[8px]"></div>
         </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        <main class="flex-1 p-2 overflow-y-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2" id="grid"></main>
+        <aside class="w-80 bg-white border-l p-4 flex flex-col shadow-xl">
+            <div class="text-center mb-4 border-b pb-4">
+                <span class="text-3xl font-black text-blue-600">$<span id="t-v">0.00</span></span>
+                <button onclick="abrirCobro()" class="w-full bg-green-500 text-white py-4 rounded-2xl font-black text-xl mt-2 shadow-lg active:scale-95 transition">COBRAR</button>
+            </div>
+            <div id="carrito" class="flex-1 overflow-y-auto space-y-1"></div>
+        </aside>
     </div>
 
     <div id="modal-cobro" class="fixed inset-0 bg-slate-900/90 hidden items-center justify-center p-4 z-[200]">
-        <div class="bg-white rounded-[2.5rem] max-w-sm w-full p-8 text-center border-t-8 border-blue-900 shadow-2xl">
-            <h2 class="text-2xl font-black mb-6 text-blue-900 uppercase italic">Finalizar Venta</h2>
-            <input type="number" id="monto-pagado" oninput="actualizarCambio()" class="w-full p-5 border-2 rounded-[1.5rem] text-center text-4xl font-black mb-6 outline-none focus:border-blue-500" placeholder="0.00">
-            <div class="p-6 bg-yellow-400 rounded-[1.5rem] mb-8 text-blue-900 font-black shadow-lg">
-                <p class="text-[11px] uppercase opacity-70">Cambio:</p>
-                <p class="text-5xl tracking-tighter">$ <span id="cambio-texto">0.00</span></p>
+        <div class="bg-white rounded-[2rem] max-w-sm w-full p-6 text-center shadow-2xl">
+            <h2 class="text-2xl font-black mb-4 text-blue-900 uppercase">Finalizar Cobro</h2>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button onclick="quickPay(100)" class="bg-slate-100 py-4 rounded-xl font-black text-slate-500 hover:bg-blue-50">$100</button>
+                <button onclick="quickPay(200)" class="bg-slate-100 py-4 rounded-xl font-black text-slate-500 hover:bg-blue-50">$200</button>
+                <button onclick="quickPay(500)" class="bg-slate-100 py-4 rounded-xl font-black text-slate-500 hover:bg-blue-50">$500</button>
             </div>
-            <button onclick="finalizarVenta()" class="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-xl shadow-xl active:scale-95 transition-all">CONFIRMAR</button>
-            <button onclick="cerrarCobro()" class="mt-4 text-slate-400 uppercase text-[10px] font-bold underline">Regresar</button>
+            <input type="number" id="pago-cliente" oninput="calcCambio()" class="w-full p-4 border-2 rounded-xl text-center text-3xl font-black mb-4 outline-none focus:border-blue-500" placeholder="0.00">
+            <div class="p-4 bg-yellow-400 rounded-xl mb-4 text-blue-900 font-black">
+                <p class="text-[10px] uppercase opacity-70">Cambio:</p>
+                <p class="text-4xl">$ <span id="cambio-v">0.00</span></p>
+            </div>
+            <button onclick="finalizarVenta()" class="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase shadow-lg">Registrar Venta</button>
+            <button onclick="cerrarCobro()" class="mt-4 text-slate-400 uppercase text-[10px] font-bold underline block mx-auto">Volver</button>
         </div>
     </div>
 
+    <div id="modal-login" class="fixed inset-0 bg-white z-[400] flex items-center justify-center p-4">
+        <div class="max-w-sm w-full border-4 border-blue-900 p-8 rounded-[2rem] shadow-2xl text-center">
+            <h1 class="text-4xl font-black text-blue-900 italic mb-6">CREDI<span class="text-yellow-400">CEL</span></h1>
+            <select id="sel-u" class="w-full p-4 border-2 rounded-xl mb-4 font-bold text-blue-900 bg-slate-50"></select>
+            <select id="sel-s" class="w-full p-4 border-2 rounded-xl mb-4 font-bold text-blue-900 bg-slate-50">
+                <option>Navojoa</option><option>Huatabampo</option><option>Bodega</option>
+            </select>
+            <input id="pin" type="password" class="w-full p-4 border-2 rounded-xl text-center text-2xl tracking-[10px] mb-4 outline-none" placeholder="****">
+            <button onclick="login()" class="w-full blue-gradient text-white py-5 rounded-2xl font-black uppercase shadow-lg">Entrar</button>
+        </div>
+    </div>
+
+    <div id="sidebar" class="sidebar closed p-6 flex flex-col shadow-2xl border-r-[10px] border-blue-900">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-black text-blue-900 uppercase italic">Ventas del Turno</h2>
+            <button onclick="toggleSidebar()" class="text-4xl">&times;</button>
+        </div>
+        <div id="corte-lista" class="flex-1 overflow-y-auto text-[10px] font-bold text-slate-500"></div>
+        <div id="total-corte" class="p-4 bg-blue-900 text-yellow-400 text-3xl font-black text-center rounded-2xl my-4">$0.00</div>
+        <button onclick="enviarCorte()" class="w-full bg-red-600 text-white py-4 rounded-xl font-black uppercase text-xs">Cerrar Turno y Salir</button>
+    </div>
+
     <script>
-        // NUEVA URL ACTUALIZADA
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwlz2D5GwiLOjPEhiASkl15gQuJfxGglj1_hIrhcGK8dRKgswFXbZDGrr4mR1o8F-GPHQ/exec";
-        
-        let LISTA_USUARIOS = [], PRODUCTOS = [], carrito = [], vendedorActivo = "", sucursalActiva = "";
-        let ventasAcumuladasDia = {}, totalAcumuladoTurno = 0;
+        const URL = "https://script.google.com/macros/s/AKfycbwlz2D5GwiLOjPEhiASkl15gQuJfxGglj1_hIrhcGK8dRKgswFXbZDGrr4mR1o8F-GPHQ/exec";
+        let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
 
         window.onload = async () => {
-            document.getElementById('loading-overlay').style.display = 'flex';
-            try {
-                const res = await fetch(WEB_APP_URL + "?action=getUsers");
-                LISTA_USUARIOS = await res.json();
-                document.getElementById('user-select').innerHTML = LISTA_USUARIOS.map(u => `<option value="${u.nombre}">${u.nombre}</option>`).join('');
-            } catch (e) { alert("Error de conexión"); }
-            document.getElementById('loading-overlay').style.display = 'none';
+            const res = await fetch(URL + "?action=getUsers");
+            USERS = await res.json();
+            document.getElementById('sel-u').innerHTML = USERS.map(u => `<option>${u.nombre}</option>`).join('');
+            
+            // RECUPERAR MEMORIA LOCAL
+            const memoU = localStorage.getItem('lastU');
+            const memoS = localStorage.getItem('lastS');
+            if(memoU) document.getElementById('sel-u').value = memoU;
+            if(memoS) document.getElementById('sel-s').value = memoS;
         };
 
-        async function intentarEntrar() {
-            const nombreSel = document.getElementById('user-select').value;
-            const pinIngresado = document.getElementById('user-pin').value;
-            const sucursalSel = document.getElementById('sucursal-select').value;
-            const usuario = LISTA_USUARIOS.find(u => u.nombre === nombreSel);
+        async function login() {
+            const u = USERS.find(x => x.nombre == document.getElementById('sel-u').value);
+            if(u.pin == document.getElementById('pin').value) {
+                vNom = u.nombre; vSuc = document.getElementById('sel-s').value;
+                
+                // GUARDAR EN MEMORIA
+                localStorage.setItem('lastU', vNom);
+                localStorage.setItem('lastS', vSuc);
 
-            if (usuario && usuario.pin.toString() === pinIngresado) {
-                vendedorActivo = nombreSel;
-                sucursalActiva = sucursalSel;
-                if(vendedorActivo.toLowerCase() === "said") document.getElementById('admin-tools').classList.remove('hidden');
-
-                document.getElementById('loading-overlay').style.display = 'flex';
-                try {
-                    const resP = await fetch(WEB_APP_URL + "?action=getProducts");
-                    PRODUCTOS = await resP.json();
-                    PRODUCTOS.push({id:'REP', n:'REPARACION', p:0}, {id:'GAS', n:'GASTO', p:0});
-                    pintarProductos();
-                    document.getElementById('label-vendedor').innerText = vendedorActivo;
-                    document.getElementById('label-sucursal').innerText = sucursalActiva;
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('main-app').classList.remove('hidden');
-                } catch (e) { alert("Error cargando productos"); }
-                document.getElementById('loading-overlay').style.display = 'none';
-            } else { alert("PIN INCORRECTO"); }
+                if(vNom.toLowerCase()=="said") document.getElementById('admin-tools').classList.remove('hidden');
+                document.getElementById('modal-login').style.display = 'none';
+                document.getElementById('v-nom').innerText = vNom;
+                document.getElementById('v-suc').innerText = vSuc;
+                const res = await fetch(URL + "?action=getProducts");
+                PRODS = await res.json();
+                pintar();
+            } else { alert("PIN Incorrecto"); }
         }
 
-        async function enviarDatos(data) {
-            document.getElementById('loading-overlay').style.display = 'flex';
-            try {
-                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-                return true;
-            } catch (e) { return false; } finally {
-                document.getElementById('loading-overlay').style.display = 'none';
-            }
-        }
-
-        function pintarProductos() {
-            document.getElementById('grid-productos').innerHTML = PRODUCTOS.map(p => `
-                <div onclick="clickProducto('${p.id}', '${p.n}', ${p.p})" class="product-card bg-white p-3 rounded-xl text-center shadow-sm flex flex-col justify-between h-28 border">
-                    <p class="text-blue-600 font-black text-xs uppercase">${p.id}</p>
-                    <p class="text-[8px] font-bold text-slate-400 uppercase leading-none overflow-hidden h-4">${p.n}</p>
-                    <p class="text-blue-900 font-black text-sm">${(p.id==='REP' || p.id==='GAS') ? 'VAR' : '$'+p.p}</p>
+        function pintar() {
+            document.getElementById('grid').innerHTML = PRODS.map(p => `
+                <div onclick="add('${p.id}', '${p.n}', ${p.p})" class="product-card bg-white p-2 rounded-xl shadow-sm text-center flex flex-col h-24 justify-between border">
+                    <div class="text-blue-600 font-black text-[10px] uppercase">${p.id}</div>
+                    <div class="text-[7px] font-bold text-slate-400 uppercase leading-none overflow-hidden h-4">${p.n}</div>
+                    <div class="text-blue-900 font-black text-[10px]">$${p.p}</div>
                 </div>`).join('');
         }
 
-        function clickProducto(id, n, p) {
-            if(id === 'GAS') {
-                const con = prompt("CONCEPTO:"); const mon = prompt("MONTO:");
-                if(con && mon > 0) enviarDatos({ tipo: "GASTO", vendedor: vendedorActivo, sucursal: sucursalActiva, concepto: con, monto: parseFloat(mon) });
-            } else if(id === 'REP') {
-                const m = prompt("COSTO REPARACIÓN:"); if(m > 0) agregar(id, n, parseFloat(m));
-            } else { agregar(id, n, p); }
+        function add(id, n, p) {
+            carrito.push({id, n, p});
+            actualizar();
         }
 
-        function agregar(id, n, p) { 
-            carrito.push({id, n, p}); 
-            if(!ventasAcumuladasDia[id]) ventasAcumuladasDia[id] = { cant: 0, total: 0 };
-            ventasAcumuladasDia[id].cant += 1; ventasAcumuladasDia[id].total += p;
-            actualizarCarrito(); 
-        }
-        
-        function actualizarCarrito() {
-            document.getElementById('lista-carrito').innerHTML = carrito.map((item, i) => `
-                <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border-l-4 border-blue-600 text-[10px] mb-1">
-                    <div class="flex-1 truncate font-black text-blue-900 uppercase">${item.n}</div>
-                    <button onclick="eliminar(${i})" class="text-red-500 font-black text-xl ml-2">&times;</button>
+        function actualizar() {
+            document.getElementById('carrito').innerHTML = carrito.map((item, i) => `
+                <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg text-[9px] border-l-4 border-blue-600 mb-1">
+                    <div class="font-bold truncate w-40 uppercase">${item.n}</div>
+                    <button onclick="del(${i})" class="text-red-500 text-lg font-black">&times;</button>
                 </div>`).join('');
-            document.getElementById('total-venta').innerText = carrito.reduce((s, i) => s + i.p, 0).toFixed(2);
+            document.getElementById('t-v').innerText = carrito.reduce((a, b) => a + b.p, 0).toFixed(2);
         }
 
-        function eliminar(i) {
-            const item = carrito[i];
-            ventasAcumuladasDia[item.id].cant -= 1;
-            ventasAcumuladasDia[item.id].total -= item.p;
-            carrito.splice(i, 1); 
-            actualizarCarrito(); 
-        }
+        function del(i) { carrito.splice(i, 1); actualizar(); }
 
-        function irACobrar() { if(carrito.length > 0) document.getElementById('modal-cobro').style.display = 'flex'; }
+        function abrirCobro() { if(carrito.length > 0) document.getElementById('modal-cobro').style.display = 'flex'; }
         function cerrarCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
-        function actualizarCambio() {
-            const t = parseFloat(document.getElementById('total-venta').innerText);
-            const p = parseFloat(document.getElementById('monto-pagado').value) || 0;
-            document.getElementById('cambio-texto').innerText = (p - t > 0) ? (p - t).toFixed(2) : "0.00";
+        function quickPay(n) { document.getElementById('pago-cliente').value = n; calcCambio(); }
+        function calcCambio() {
+            const total = parseFloat(document.getElementById('t-v').innerText);
+            const pago = parseFloat(document.getElementById('pago-cliente').value) || 0;
+            document.getElementById('cambio-v').innerText = (pago - total > 0) ? (pago - total).toFixed(2) : "0.00";
         }
 
         async function finalizarVenta() {
+            document.getElementById('loading').style.display = 'flex';
             const agrupado = {};
-            carrito.forEach(item => {
-                if(!agrupado[item.id]) agrupado[item.id] = { codigo: item.id, cantidad: 0, precio: 0 };
-                agrupado[item.id].cantidad += 1; agrupado[item.id].precio += item.p;
+            carrito.forEach(x => {
+                if(!agrupado[x.id]) agrupado[x.id] = {codigo: x.id, cantidad: 0, precio: 0};
+                agrupado[x.id].cantidad++; agrupado[x.id].precio += x.p;
+                if(!corte[x.id]) corte[x.id] = {cant: 0, total: 0};
+                corte[x.id].cant++; corte[x.id].total += x.p;
             });
-            const data = { tipo: "VENTA", vendedor: vendedorActivo, sucursal: sucursalActiva, items: Object.values(agrupado), corteX: "" };
-            if(await enviarDatos(data)) { 
-                alert("REGISTRADO EN MATRIZ"); 
-                carrito = []; actualizarCarrito(); cerrarCobro(); 
-                document.getElementById('monto-pagado').value = "";
-            }
+            try {
+                await fetch(URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: Object.values(agrupado)})});
+                alert("✅ Venta Guardada");
+                carrito = []; actualizar(); cerrarCobro();
+                document.getElementById('pago-cliente').value = "";
+            } catch(e) { alert("Error de conexión"); }
+            document.getElementById('loading').style.display = 'none';
         }
 
-        async function ajusteInventario(modo) {
-            let data = { tipo: "AJUSTE_INV", modo: modo };
-            if(modo === "TRASPASO") {
-                data.origen = prompt("UBICACIÓN ORIGEN (Navojoa/Huatabampo/Bodega):");
-                if(!data.origen) return;
-                data.destino = prompt("UBICACIÓN DESTINO (Navojoa/Huatabampo/Bodega):");
-                if(!data.destino) return;
-            } else {
-                data.ubicacion = prompt("SUCURSAL (Navojoa/Huatabampo/Bodega):");
-                if(!data.ubicacion) return;
-            }
-            data.codigo = prompt("CÓDIGO:");
-            data.cantidad = prompt("CANTIDAD:");
-            if(!data.codigo || !data.cantidad) return;
-            if(await enviarDatos(data)) alert("STOCK ACTUALIZADO");
+        async function ajusteInv(modo) {
+            let d = { tipo: "AJUSTE_INV", modo: modo };
+            if(modo == "TRASPASO") {
+                d.origen = prompt("Sucursal Origen (Navojoa/Huatabampo/Bodega):");
+                d.destino = prompt("Sucursal Destino (Navojoa/Huatabampo/Bodega):");
+            } else { d.ubicacion = prompt("Sucursal del movimiento:"); }
+            d.codigo = prompt("Código del producto:");
+            d.cantidad = prompt("Cantidad:");
+            if(!d.codigo || !d.cantidad) return;
+            document.getElementById('loading').style.display = 'flex';
+            await fetch(URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify(d)});
+            alert("✅ Inventario Actualizado");
+            document.getElementById('loading').style.display = 'none';
         }
 
-        async function modalEquipo() {
-            const mod = prompt("MODELO:"); const imei = prompt("IMEI:");
-            const num = prompt("NÚMERO:"); const nom = prompt("CLIENTE:"); const eng = prompt("ENGANCHE:");
-            if(mod && imei) {
-                const data = { tipo: "EQUIPO", modelo: mod, imei: imei, numero: num, nombre: nom, enganche: eng, sucursal: sucursalActiva };
-                if(await enviarDatos(data)) alert("EQUIPO REGISTRADO");
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('closed');
+            let h = ""; let t = 0;
+            for(let id in corte) {
+                h += `<div class="flex justify-between border-b py-2 italic font-black uppercase"><span>${corte[id].cant}x ${id}</span><span>$${corte[id].total.toFixed(2)}</span></div>`;
+                t += corte[id].total;
             }
+            document.getElementById('corte-lista').innerHTML = h || "<p class='text-center py-10 opacity-30'>Sin ventas registradas</p>";
+            document.getElementById('total-corte').innerText = "$"+t.toFixed(2);
         }
 
-        function toggleCorte() {
-            document.getElementById('sidebar-corte').classList.toggle('closed');
-            const lista = document.getElementById('lista-detalle-corte');
-            let total = 0, html = "";
-            for (let id in ventasAcumuladasDia) {
-                let v = ventasAcumuladasDia[id]; 
-                if(v.cant > 0) {
-                    total += v.total;
-                    html += `<div class="flex justify-between border-b py-2"><span class="uppercase">${v.cant}x ${id}</span><span>$${v.total.toFixed(2)}</span></div>`;
-                }
-            }
-            totalAcumuladoTurno = total;
-            lista.innerHTML = html || "<p class='text-center opacity-30 py-10'>Sin movimientos</p>";
-            document.getElementById('corte-monto').innerText = "$" + total.toFixed(2);
-        }
-
-        function ejecutarCorte() {
-            if(confirm("¿Cerrar turno y enviar corte?")) {
-                enviarDatos({ tipo: "VENTA", vendedor: vendedorActivo, sucursal: sucursalActiva, items: [], corteX: totalAcumuladoTurno });
-                setTimeout(() => { window.location.reload(); }, 1000);
+        async function enviarCorte() {
+            const t = document.getElementById('total-corte').innerText.replace("$", "");
+            if(confirm("¿Cerrar turno? Se reiniciará la sesión.")) {
+                document.getElementById('loading').style.display = 'flex';
+                await fetch(URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: [], corteX: t})});
+                window.location.reload();
             }
         }
     </script>
 </body>
 </html>
-
