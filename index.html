@@ -2,41 +2,40 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Credicel POS V16.2 - Multi-Resolución</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Credicel POS V16.3 - Estable</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos base para adaptabilidad total */
+        /* Reset y ajustes de scroll para evitar bloqueos en Tablets */
         html, body { 
             height: 100%; 
             margin: 0; 
+            padding: 0;
             background: #f1f5f9; 
             font-family: ui-sans-serif, system-ui, sans-serif;
+            overflow: hidden;
         }
 
         .app-container {
             display: flex;
             flex-direction: column;
             height: 100vh;
+            height: -webkit-fill-available;
         }
 
-        /* Header flexible que no corta botones */
+        /* Header ajustable: No se corta en Tablets */
         header {
             flex-shrink: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            align-items: center;
-            justify-content: space-between;
+            z-index: 50;
+            padding-top: env(safe-area-inset-top, 0.75rem);
         }
 
-        /* Grid de productos que se ajusta solo al tamaño del dispositivo */
+        /* Grid de productos responsivo */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 0.5rem;
-            padding: 0.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 0.6rem;
+            padding: 0.75rem;
         }
 
         .product-card { 
@@ -47,34 +46,34 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 100px;
+            height: 110px;
             background: white;
-            border-radius: 0.75rem;
-            padding: 0.5rem;
+            border-radius: 0.85rem;
+            padding: 0.6rem;
             text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .product-card:active { transform: scale(0.95); background-color: #eff6ff; }
         .blue-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
 
-        /* Sidebar con ancho relativo */
+        /* Sidebar con ancho relativo para dispositivos táctiles */
         .sidebar { 
-            transition: 0.3s; 
+            transition: transform 0.3s ease-in-out; 
             width: 85%; 
-            max-width: 350px; 
+            max-width: 320px; 
             position: fixed; 
             inset: 0 auto 0 0; 
             z-index: 300; 
             background: white; 
             border-right: 5px solid #1e3a8a; 
+            box-shadow: 10px 0 15px rgba(0,0,0,0.1);
         }
         .sidebar.closed { transform: translateX(-100%); }
 
-        /* Contenedor principal con scroll independiente */
         .content-main {
             flex: 1;
             display: flex;
-            flex-direction: row;
             overflow: hidden;
         }
 
@@ -83,22 +82,32 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        /* Overlay de carga con prioridad alta */
+        #loading { 
+            display: flex;
+            transition: opacity 0.3s ease;
+        }
+
         @media (max-width: 768px) {
             .content-main { flex-direction: column; }
-            .cart-panel { width: 100% !important; height: 35%; border-left: 0; border-top: 2px solid #cbd5e1; }
+            .cart-panel { width: 100% !important; height: 40%; border-left: 0; border-top: 2px solid #cbd5e1; }
         }
     </style>
 </head>
-<body class="overflow-hidden">
+<body>
 
-    <div id="loading" class="fixed inset-0 bg-black/60 z-[500] flex items-center justify-center text-white font-black uppercase text-center">
-        <div>PROCESANDO...<br><span class="text-[10px] font-normal tracking-widest">No cierres la ventana</span></div>
+    <div id="loading" class="fixed inset-0 bg-black/70 z-[600] flex items-center justify-center text-white font-black uppercase text-center">
+        <div class="p-6 bg-white rounded-3xl text-blue-900 shadow-2xl">
+            <div class="animate-spin h-10 w-10 border-4 border-blue-900 border-t-transparent rounded-full mx-auto mb-4"></div>
+            SINCRO MATRIZ...<br>
+            <span class="text-[9px] font-bold opacity-60 tracking-widest">Iniciando Sistema</span>
+        </div>
     </div>
 
     <div class="app-container">
-        <header class="blue-gradient text-white shadow-lg">
+        <header class="blue-gradient text-white shadow-lg flex flex-wrap gap-2 items-center justify-between p-3">
             <div class="flex flex-wrap gap-2">
-                <button onclick="toggleSidebar()" class="bg-yellow-400 text-blue-900 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-md">CORTE</button>
+                <button onclick="toggleSidebar()" class="bg-yellow-400 text-blue-900 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-md active:scale-90">CORTE</button>
                 <div id="admin-tools" class="hidden flex flex-wrap gap-1">
                     <button onclick="ajusteInv('ENTRADA')" class="bg-blue-500 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm">Entrada</button>
                     <button onclick="ajusteInv('SALIDA')" class="bg-red-500 px-3 py-2 rounded-lg font-black text-[10px] uppercase shadow-sm">Ajuste</button>
@@ -120,7 +129,7 @@
             <aside class="cart-panel w-80 bg-white border-l flex flex-col shadow-xl">
                 <div class="p-4 border-b text-center shrink-0">
                     <div class="text-3xl font-black text-blue-600 leading-none mb-2">$<span id="t-v">0.00</span></div>
-                    <button onclick="abrirCobro()" class="w-full bg-green-500 text-white py-3 rounded-xl font-black text-xl shadow-lg uppercase">Cobrar</button>
+                    <button onclick="abrirCobro()" class="w-full bg-green-500 text-white py-4 rounded-2xl font-black text-xl shadow-lg uppercase active:scale-95 transition">Cobrar</button>
                     <button onclick="limpiarVenta()" class="mt-2 text-[10px] text-slate-400 font-bold underline uppercase">Limpiar</button>
                 </div>
                 <div id="carrito" class="flex-1 scroll-area p-2 space-y-1"></div>
@@ -129,18 +138,18 @@
     </div>
 
     <div id="modal-login" class="fixed inset-0 bg-white z-[400] flex items-center justify-center p-4">
-        <div class="w-full max-w-sm border-4 border-blue-900 p-8 rounded-[2rem] shadow-2xl text-center bg-white">
+        <div class="w-full max-w-sm border-4 border-blue-900 p-8 rounded-[2.5rem] shadow-2xl text-center bg-white">
             <h1 class="text-4xl font-black text-blue-900 italic mb-6 uppercase">Credi<span class="text-yellow-400">cel</span></h1>
-            <select id="sel-u" class="w-full p-4 border-2 rounded-xl mb-4 font-bold text-blue-900 bg-slate-50"></select>
-            <select id="sel-s" class="w-full p-4 border-2 rounded-xl mb-4 font-bold text-blue-900 bg-slate-50">
+            <select id="sel-u" class="w-full p-4 border-2 rounded-xl mb-4 font-bold text-blue-900 bg-slate-50 outline-none"></select>
+            <select id="sel-s" class="w-full p-4 border-2 rounded-xl mb-4 font-bold text-blue-900 bg-slate-50 outline-none">
                 <option>Navojoa</option><option>Huatabampo</option><option>Bodega</option>
             </select>
-            <input id="pin" type="password" maxlength="6" class="w-full p-4 border-2 rounded-xl text-center text-2xl tracking-[10px] mb-4" placeholder="****">
-            <button onclick="login()" class="w-full blue-gradient text-white py-5 rounded-2xl font-black uppercase shadow-lg">Entrar</button>
+            <input id="pin" type="password" inputmode="numeric" maxlength="6" class="w-full p-4 border-2 rounded-xl text-center text-2xl tracking-[10px] mb-4 outline-none" placeholder="****">
+            <button onclick="login()" class="w-full blue-gradient text-white py-5 rounded-2xl font-black uppercase shadow-lg active:scale-95 transition">Entrar</button>
         </div>
     </div>
 
-    <div id="modal-cobro" class="fixed inset-0 bg-slate-900/90 hidden items-center justify-center p-4 z-[200]">
+    <div id="modal-cobro" class="fixed inset-0 bg-slate-900/90 hidden items-center justify-center p-4 z-[500]">
         <div class="bg-white rounded-[2rem] max-w-sm w-full p-6 text-center shadow-2xl">
             <h2 class="text-2xl font-black mb-4 text-blue-900 uppercase italic">Finalizar Cobro</h2>
             <div class="grid grid-cols-3 gap-2 mb-4">
@@ -154,7 +163,7 @@
                 <p class="text-4xl">$ <span id="cambio-v">0.00</span></p>
             </div>
             <button onclick="finalizarVenta()" class="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase shadow-lg">Registrar</button>
-            <button onclick="cerrarCobro()" class="mt-4 text-[10px] font-bold underline uppercase">Volver</button>
+            <button onclick="cerrarCobro()" class="mt-4 text-[10px] font-bold underline uppercase block mx-auto">Volver</button>
         </div>
     </div>
 
@@ -174,19 +183,33 @@
         const URL = "https://script.google.com/macros/s/AKfycbwVEqN8Imb33u2bYnLNoC3rWc-M7mqjjKDfhuOaoREMRwmF6dDUckYij71ZQfw4rQfR9Q/exec";
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
 
+        // INICIO CORREGIDO PARA EVITAR PANTALLA CARGANDO ETERNA
         window.onload = async () => {
             try {
                 const res = await fetch(URL + "?action=getUsers");
+                if (!res.ok) throw new Error('Network error');
                 USERS = await res.json();
+                
                 document.getElementById('sel-u').innerHTML = USERS.map(u => `<option>${u.nombre}</option>`).join('');
+                
                 const memoU = localStorage.getItem('lastU'), memoS = localStorage.getItem('lastS');
                 if(memoU) document.getElementById('sel-u').value = memoU;
                 if(memoS) document.getElementById('sel-s').value = memoS;
+
                 const backup = localStorage.getItem('backup_venta');
                 if(backup) { carrito = JSON.parse(backup); actualizar(); }
+                
                 const backupCorte = localStorage.getItem('backup_corte');
                 if(backupCorte) { corte = JSON.parse(backupCorte); }
-            } catch (e) { alert("Error de conexión."); }
+
+            } catch (e) { 
+                console.error(e);
+                alert("Error al conectar con Matriz. Verifique su internet o la URL del script."); 
+            } finally {
+                // Siempre ocultamos el cargando al terminar el intento
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading').style.display = 'none', 300);
+            }
         };
 
         async function login() {
@@ -194,14 +217,22 @@
             if(u && u.pin.trim() == document.getElementById('pin').value.trim()) {
                 vNom = u.nombre; vSuc = document.getElementById('sel-s').value;
                 localStorage.setItem('lastU', vNom); localStorage.setItem('lastS', vSuc);
+                
                 if(vNom.toLowerCase() == "said") document.getElementById('admin-tools').classList.remove('hidden');
+                
                 document.getElementById('modal-login').style.display = 'none';
                 document.getElementById('v-nom').innerText = vNom; document.getElementById('v-suc').innerText = vSuc;
+                
                 document.getElementById('loading').style.display = 'flex';
-                const res = await fetch(URL + "?action=getProducts");
-                PRODS = await res.json();
-                PRODS.push({id:'REP', n:'REPARACIÓN/VAR', p:0}, {id:'GAS', n:'GASTO INTERNO', p:0});
-                pintar();
+                document.getElementById('loading').style.opacity = '1';
+
+                try {
+                    const res = await fetch(URL + "?action=getProducts");
+                    PRODS = await res.json();
+                    PRODS.push({id:'REP', n:'REPARACIÓN/VAR', p:0}, {id:'GAS', n:'GASTO INTERNO', p:0});
+                    pintar();
+                } catch (e) { alert("Error al cargar productos."); }
+                
                 document.getElementById('loading').style.display = 'none';
             } else { alert("PIN Incorrecto."); }
         }
@@ -244,6 +275,7 @@
         function abrirCobro() { if(carrito.length > 0) document.getElementById('modal-cobro').style.display = 'flex'; }
         function cerrarCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
         function quickPay(n) { document.getElementById('pago-cliente').value = n; calcCambio(); }
+        
         function calcCambio() {
             const t = parseFloat(document.getElementById('t-v').innerText), p = parseFloat(document.getElementById('pago-cliente').value) || 0;
             document.getElementById('cambio-v').innerText = (p - t > 0) ? (p - t).toFixed(2) : "0.00";
@@ -251,6 +283,7 @@
 
         async function finalizarVenta() {
             document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading').style.opacity = '1';
             const agrupado = [];
             carrito.forEach(x => {
                 let item = agrupado.find(i => i.codigo === x.id);
@@ -263,24 +296,26 @@
                 await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: agrupado})});
                 localStorage.setItem('backup_corte', JSON.stringify(corte));
                 localStorage.removeItem('backup_venta');
-                alert("✅ Registrado.");
+                alert("✅ Venta Guardada");
                 carrito = []; actualizar(); cerrarCobro();
-            } catch(e) { alert("Error de conexión. Carrito guardado."); }
+            } catch(e) { alert("Error de conexión. Se guardó respaldo local."); }
             document.getElementById('loading').style.display = 'none';
         }
 
         async function enviarManual(data) {
             document.getElementById('loading').style.display = 'flex';
-            try { await fetch(URL, {method: 'POST', body: JSON.stringify(data)}); alert("✅ Éxito."); }
-            catch(e) { alert("Error."); }
+            document.getElementById('loading').style.opacity = '1';
+            try { await fetch(URL, {method: 'POST', body: JSON.stringify(data)}); alert("✅ Registro Exitoso"); }
+            catch(e) { alert("Error al enviar datos."); }
             document.getElementById('loading').style.display = 'none';
         }
 
         async function ajusteInv(modo) {
             let d = { tipo: "AJUSTE_INV", modo: modo };
             if(modo == "TRASPASO") {
-                d.origen = prompt("Origen:"); d.destino = prompt("Destino:");
-            } else { d.ubicacion = prompt("Sucursal:"); }
+                d.origen = prompt("Sucursal Origen (Navojoa/Huatabampo/Bodega):");
+                d.destino = prompt("Sucursal Destino (Navojoa/Huatabampo/Bodega):");
+            } else { d.ubicacion = prompt("Sucursal para movimiento:"); }
             d.codigo = prompt("Código:"); d.cantidad = prompt("Cantidad:");
             if(d.codigo && d.cantidad) enviarManual(d);
         }
@@ -305,10 +340,12 @@
             const t = document.getElementById('total-corte').innerText.replace("$", "");
             if(confirm("¿Cerrar turno?")) {
                 document.getElementById('loading').style.display = 'flex';
+                document.getElementById('loading').style.opacity = '1';
                 try {
                     await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: [], corteX: t})});
-                    localStorage.removeItem('backup_corte'); window.location.reload();
-                } catch(e) { alert("Error al cerrar."); }
+                    localStorage.removeItem('backup_corte'); 
+                    window.location.reload();
+                } catch(e) { alert("Error al cerrar turno."); }
                 document.getElementById('loading').style.display = 'none';
             }
         }
