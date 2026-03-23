@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Credicel POS V16.8 - Corte con Gastos</title>
+    <title>Credicel POS V16.9 - Balance Exacto</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Estilos base para estabilidad en Tablets */
@@ -99,22 +99,21 @@
 
     <div id="sidebar" class="sidebar closed p-6 flex flex-col shadow-2xl">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="font-black text-blue-900 uppercase italic">Turno Actual</h2>
+            <h2 class="font-black text-blue-900 uppercase italic">Resumen del Turno</h2>
             <button onclick="toggleSidebar()" class="text-4xl font-bold">&times;</button>
         </div>
         <div id="corte-lista" class="flex-1 scroll-area text-[10px] font-bold text-slate-500 space-y-2"></div>
-        <div class="p-4 bg-blue-900 rounded-2xl my-4 text-center">
-            <div id="total-corte" class="text-yellow-400 text-3xl font-black">$0.00</div>
-        </div>
+        
+        <div class="p-4 bg-blue-900 rounded-2xl my-4 text-left" id="total-corte">
+            </div>
+        
         <button onclick="enviarCorte()" class="w-full bg-red-600 text-white py-4 rounded-xl font-black uppercase text-xs">Cerrar Turno</button>
     </div>
 
     <script>
-        // URL ACTUALIZADA
         const URL = "https://script.google.com/macros/s/AKfycbxyV_vSl-9U1FXdI0ckTMrEmiOY2KbhzxL1fon372k6-xzumVqaRdCQwUNgEg1X70tabA/exec";
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
         
-        // Carga inicial 
         window.onload = async () => {
             try {
                 const res = await fetch(URL + "?action=getUsers");
@@ -134,7 +133,6 @@
             setTimeout(() => document.getElementById('loading').style.display = 'none', 300); }
         };
         
-        // Login 
         async function login() {
             const u = USERS.find(x => x.nombre.trim() == document.getElementById('sel-u').value.trim());
             if(u && u.pin.trim() == document.getElementById('pin').value.trim()) {
@@ -164,7 +162,6 @@
                 </div>`).join('');
         }
 
-        // Manejo de clics y productos especiales 
         function clickProd(id, n, p) {
             if(id === 'GAS') {
                 const con = prompt("CONCEPTO DEL GASTO:");
@@ -173,11 +170,10 @@
                     const gastoF = parseFloat(mon);
                     enviarManual({ tipo: "GASTO", vendedor: vNom, sucursal: vSuc, concepto: con, monto: gastoF });
                     
-                    // LÓGICA AGREGADA: Descontar gasto del corte local visualmente
                     const gastoNombre = 'GAS: ' + con.toUpperCase().substring(0, 15);
                     if(!corte[gastoNombre]) corte[gastoNombre] = {cant: 0, total: 0};
                     corte[gastoNombre].cant++;
-                    corte[gastoNombre].total -= gastoF; // Resta en el total
+                    corte[gastoNombre].total -= gastoF; 
                     localStorage.setItem('backup_corte', JSON.stringify(corte));
                 }
             } else if(id === 'REP' || id === 'ABONO') {
@@ -204,19 +200,13 @@
 
         function del(i) { carrito.splice(i, 1);
         localStorage.setItem('backup_venta', JSON.stringify(carrito)); actualizar(); }
-        function limpiarVenta() { carrito = []; localStorage.removeItem('backup_venta'); actualizar();
-        }
-        function abrirCobro() { if(carrito.length > 0) document.getElementById('modal-cobro').style.display = 'flex';
-        }
-        function cerrarCobro() { document.getElementById('modal-cobro').style.display = 'none';
-        }
-        function quickPay(n) { document.getElementById('pago-cliente').value = n; calcCambio();
-        }
+        function limpiarVenta() { carrito = []; localStorage.removeItem('backup_venta'); actualizar(); }
+        function abrirCobro() { if(carrito.length > 0) document.getElementById('modal-cobro').style.display = 'flex'; }
+        function cerrarCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
+        function quickPay(n) { document.getElementById('pago-cliente').value = n; calcCambio(); }
         function calcCambio() { const t = parseFloat(document.getElementById('t-v').innerText), p = parseFloat(document.getElementById('pago-cliente').value) || 0;
-        document.getElementById('cambio-v').innerText = (p - t > 0) ? (p - t).toFixed(2) : "0.00";
-        }
+        document.getElementById('cambio-v').innerText = (p - t > 0) ? (p - t).toFixed(2) : "0.00"; }
 
-        // Finalizar venta
         async function finalizarVenta() {
             document.getElementById('loading').style.display = 'flex';
             document.getElementById('loading').style.opacity = '1';
@@ -244,20 +234,20 @@
                     alert("✅ Registro Exitoso");
                     carrito = []; actualizar(); cerrarCobro();
                 } else { throw new Error(result.msg); }
-            } catch(e) { alert("Error de conexión. Se guardó respaldo local.");
-            console.error(e); }
+            } catch(e) { alert("Error de conexión. Se guardó respaldo local."); console.error(e); }
             document.getElementById('loading').style.display = 'none';
         }
 
-        // Funciones manuales y Botón Equipo 
-        async function enviarManual(data) { document.getElementById('loading').style.display = 'flex';
-        document.getElementById('loading').style.opacity = '1'; try { await fetch(URL, {method: 'POST', body: JSON.stringify(data)}); alert("✅ Registro Exitoso");
-        } catch(e) { alert("Error al enviar datos."); } document.getElementById('loading').style.display = 'none';
+        async function enviarManual(data) { 
+            document.getElementById('loading').style.display = 'flex'; document.getElementById('loading').style.opacity = '1'; 
+            try { await fetch(URL, {method: 'POST', body: JSON.stringify(data)}); alert("✅ Registro Exitoso"); } catch(e) { alert("Error al enviar datos."); } 
+            document.getElementById('loading').style.display = 'none';
         }
         
-        async function ajusteInv(modo) { let d = { tipo: "AJUSTE_INV", modo: modo };
-        if(modo == "TRASPASO") { d.origen = prompt("Sucursal Origen:"); d.destino = prompt("Sucursal Destino:"); } else { d.ubicacion = prompt("Sucursal:");
-        } d.codigo = prompt("Código:"); d.cantidad = prompt("Cantidad:"); if(d.codigo && d.cantidad) enviarManual(d);
+        async function ajusteInv(modo) { 
+            let d = { tipo: "AJUSTE_INV", modo: modo };
+            if(modo == "TRASPASO") { d.origen = prompt("Sucursal Origen:"); d.destino = prompt("Sucursal Destino:"); } else { d.ubicacion = prompt("Sucursal:"); } 
+            d.codigo = prompt("Código:"); d.cantidad = prompt("Cantidad:"); if(d.codigo && d.cantidad) enviarManual(d);
         }
         
         async function modalEquipo() { 
@@ -265,25 +255,55 @@
             if(m && i) enviarManual({tipo: "EQUIPO", modelo: m, imei: i, numero: n, nombre: c, enganche: e, sucursal: vSuc, vendedor: vNom});
         }
 
-        // Sidebar y Corte visual (Modificado para mostrar Gastos en negativo y en rojo)
+        // --- LÓGICA DE BALANCE EXACTO ---
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('closed');
-            let h = "", t = 0;
+            let h = "";
+            let tVentas = 0;
+            let tAbonos = 0;
+            let tGastos = 0;
+            let tTotalCaja = 0;
+
             for(let id in corte) {
+                let isGas = id.startsWith('GAS:');
+                let isAbono = id === 'ABONO';
                 let isNeg = corte[id].total < 0;
-                let colorClass = isNeg ? "text-red-500" : "text-slate-600";
+                
+                let colorClass = isGas ? "text-red-400" : (isAbono ? "text-green-500" : "text-slate-600");
                 let montoFormat = isNeg ? "-$" + Math.abs(corte[id].total).toFixed(2) : "$" + corte[id].total.toFixed(2);
                 
-                h += `<div class="flex justify-between border-b py-2 italic font-black uppercase ${colorClass}"><span>${corte[id].cant}x ${id}</span><span>${montoFormat}</span></div>`;
-                t += corte[id].total;
+                h += `<div class="flex justify-between border-b py-2 italic font-black uppercase text-[9px] ${colorClass}"><span>${corte[id].cant}x ${id}</span><span>${montoFormat}</span></div>`;
+                
+                // Clasificamos los totales
+                if(isGas) { tGastos += Math.abs(corte[id].total); }
+                else if(isAbono) { tAbonos += corte[id].total; }
+                else { tVentas += corte[id].total; }
+                
+                tTotalCaja += corte[id].total; 
             }
+
             document.getElementById('corte-lista').innerHTML = h || "<p class='text-center py-10 opacity-30'>Vacío</p>";
-            document.getElementById('total-corte').innerText = t < 0 ? "-$" + Math.abs(t).toFixed(2) : "$" + t.toFixed(2);
+            
+            // Creamos el Desglose Visual
+            let breakdownHTML = `
+                <div class="text-[10px] text-white opacity-80 flex justify-between uppercase mb-1"><span>Ventas Accesorios/Rep:</span><span>$${tVentas.toFixed(2)}</span></div>
+                <div class="text-[10px] text-green-400 flex justify-between uppercase mb-1"><span>Abonos Recibidos:</span><span>$${tAbonos.toFixed(2)}</span></div>
+                <div class="text-[10px] text-red-400 flex justify-between uppercase mb-2"><span>Gastos (Salidas):</span><span>-$${tGastos.toFixed(2)}</span></div>
+                <div class="border-t border-blue-700 pt-2 text-[10px] text-white font-bold uppercase tracking-wider text-center mt-2">Total en Caja Físico</div>
+                <div class="text-yellow-400 text-3xl font-black text-center mt-1">$${tTotalCaja.toFixed(2)}</div>
+            `;
+            document.getElementById('total-corte').innerHTML = breakdownHTML;
+
+            // Guardamos las ventas puras de forma invisible para enviarlas a Google Sheets
+            window.cortePuro = tVentas.toFixed(2);
         }
 
+        // --- ENVÍO DEL CORTE AISLANDO LAS VENTAS ---
         async function enviarCorte() {
-            const t = document.getElementById('total-corte').innerText.replace("$", "");
-            if(confirm("¿Cerrar turno?")) {
+            // Aquí tomamos SOLO el dinero de los Accesorios/Reparaciones (cortePuro)
+            const t = window.cortePuro || "0.00";
+            
+            if(confirm(`¿Cerrar turno? Se registrará un CORTE por $${t} en la matriz (No incluye abonos ni gastos).`)) {
                 document.getElementById('loading').style.display = 'flex';
                 try {
                     await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: [], corteX: t})});
