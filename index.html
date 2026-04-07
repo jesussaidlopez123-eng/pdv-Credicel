@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Credicel POS V16.9 - Balance Exacto</title>
+    <title>Credicel POS V17.1 - Recargas y Balance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Estilos base para estabilidad en Tablets */
@@ -102,6 +102,7 @@
             <h2 class="font-black text-blue-900 uppercase italic">Resumen del Turno</h2>
             <button onclick="toggleSidebar()" class="text-4xl font-bold">&times;</button>
         </div>
+    
         <div id="corte-lista" class="flex-1 scroll-area text-[10px] font-bold text-slate-500 space-y-2"></div>
         
         <div class="p-4 bg-blue-900 rounded-2xl my-4 text-left" id="total-corte">
@@ -111,7 +112,7 @@
     </div>
 
     <script>
-        const URL = "https://script.google.com/macros/s/AKfycbxyV_vSl-9U1FXdI0ckTMrEmiOY2KbhzxL1fon372k6-xzumVqaRdCQwUNgEg1X70tabA/exec";
+        const URL = "https://script.google.com/macros/s/AKfycbzi0cn5--2U4WR6NVIDSdVqhxRdvSXLFmHtQs7sEBOd8syFUQqzEg6gMYqpiktGL4Y6Ng/exec";
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
         
         window.onload = async () => {
@@ -120,19 +121,25 @@
                 if (!res.ok) throw new Error('Network error');
                 USERS = await res.json();
                 document.getElementById('sel-u').innerHTML = USERS.map(u => `<option>${u.nombre}</option>`).join('');
+                
                 const memoU = localStorage.getItem('lastU'), memoS = localStorage.getItem('lastS');
                 if(memoU) document.getElementById('sel-u').value = memoU;
                 if(memoS) document.getElementById('sel-s').value = memoS;
+                
                 const backup = localStorage.getItem('backup_venta');
                 if(backup) { carrito = JSON.parse(backup); actualizar(); }
+                
                 const backupCorte = localStorage.getItem('backup_corte');
                 if(backupCorte) { corte = JSON.parse(backupCorte); }
-            } catch (e) { console.error(e);
-            alert("Error al conectar con Matriz."); }
-            finally { document.getElementById('loading').style.opacity = '0';
-            setTimeout(() => document.getElementById('loading').style.display = 'none', 300); }
+            } catch (e) { 
+                console.error(e);
+                alert("Error al conectar con Matriz."); 
+            } finally { 
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading').style.display = 'none', 300); 
+            }
         };
-        
+
         async function login() {
             const u = USERS.find(x => x.nombre.trim() == document.getElementById('sel-u').value.trim());
             if(u && u.pin.trim() == document.getElementById('pin').value.trim()) {
@@ -140,17 +147,23 @@
                 vSuc = document.getElementById('sel-s').value;
                 localStorage.setItem('lastU', vNom); localStorage.setItem('lastS', vSuc);
                 if(vNom.toLowerCase() == "said") document.getElementById('admin-tools').classList.remove('hidden');
+                
                 document.getElementById('modal-login').style.display = 'none';
                 document.getElementById('v-nom').innerText = vNom; document.getElementById('v-suc').innerText = vSuc;
                 document.getElementById('loading').style.display = 'flex'; document.getElementById('loading').style.opacity = '1';
+                
                 try {
                     const res = await fetch(URL + "?action=getProducts");
                     PRODS = await res.json();
-                    PRODS.push({id:'ABONO', n:'ABONO CRÉDITO', p:0}, {id:'REP', n:'REPARACIÓN/VAR', p:0}, {id:'GAS', n:'GASTO INTERNO', p:0});
+                    // Agregado el botón de RECARGA a la lista de botones de acción rápida
+                    PRODS.push({id:'ABONO', n:'ABONO CRÉDITO', p:0}, {id:'REP', n:'REPARACIÓN/VAR', p:0}, {id:'GAS', n:'GASTO INTERNO', p:0}, {id:'RECARGA', n:'RECARGA SALDO', p:0});
                     pintar();
                 } catch (e) { alert("Error al cargar productos."); }
+                
                 document.getElementById('loading').style.display = 'none';
-            } else { alert("PIN Incorrecto."); }
+            } else { 
+                alert("PIN Incorrecto."); 
+            }
         }
 
         function pintar() {
@@ -158,7 +171,7 @@
                 <div onclick="clickProd('${p.id}', '${p.n}', ${p.p})" class="product-card">
                     <div class="text-blue-600 font-black text-[10px] uppercase truncate">${p.id}</div>
                     <div class="text-[8px] font-bold text-slate-400 uppercase leading-none overflow-hidden h-6">${p.n}</div>
-                    <div class="text-blue-900 font-black text-[10px]">${['GAS', 'REP', 'ABONO'].includes(p.id) ? 'VAR' : '$'+p.p}</div>
+                    <div class="text-blue-900 font-black text-[10px]">${['GAS', 'REP', 'ABONO', 'RECARGA'].includes(p.id) ? 'VAR' : '$'+p.p}</div>
                 </div>`).join('');
         }
 
@@ -176,11 +189,22 @@
                     corte[gastoNombre].total -= gastoF; 
                     localStorage.setItem('backup_corte', JSON.stringify(corte));
                 }
+            } else if(id === 'RECARGA') {
+                const num = prompt("NÚMERO DE TELÉFONO:");
+                if (num) {
+                    const mon = prompt("MONTO DE LA RECARGA:");
+                    if (mon > 0) {
+                        // Enviamos el código RECARGA, pero el nombre visual incluirá el número de teléfono
+                        add(id, "RECARGA: " + num, parseFloat(mon));
+                    }
+                }
             } else if(id === 'REP' || id === 'ABONO') {
                 const msg = id === 'REP' ? "COSTO REPARACIÓN:" : "MONTO ABONO:";
                 const m = prompt(msg);
                 if(m > 0) add(id, n, parseFloat(m));
-            } else { add(id, n, p); }
+            } else { 
+                add(id, n, p); 
+            }
         }
 
         function add(id, n, p) { 
@@ -198,14 +222,20 @@
             document.getElementById('t-v').innerText = carrito.reduce((a, b) => a + b.p, 0).toFixed(2);
         }
 
-        function del(i) { carrito.splice(i, 1);
-        localStorage.setItem('backup_venta', JSON.stringify(carrito)); actualizar(); }
+        function del(i) { 
+            carrito.splice(i, 1);
+            localStorage.setItem('backup_venta', JSON.stringify(carrito)); 
+            actualizar(); 
+        }
         function limpiarVenta() { carrito = []; localStorage.removeItem('backup_venta'); actualizar(); }
         function abrirCobro() { if(carrito.length > 0) document.getElementById('modal-cobro').style.display = 'flex'; }
         function cerrarCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
         function quickPay(n) { document.getElementById('pago-cliente').value = n; calcCambio(); }
-        function calcCambio() { const t = parseFloat(document.getElementById('t-v').innerText), p = parseFloat(document.getElementById('pago-cliente').value) || 0;
-        document.getElementById('cambio-v').innerText = (p - t > 0) ? (p - t).toFixed(2) : "0.00"; }
+        
+        function calcCambio() { 
+            const t = parseFloat(document.getElementById('t-v').innerText), p = parseFloat(document.getElementById('pago-cliente').value) || 0;
+            document.getElementById('cambio-v').innerText = (p - t > 0) ? (p - t).toFixed(2) : "0.00";
+        }
 
         async function finalizarVenta() {
             document.getElementById('loading').style.display = 'flex';
@@ -213,7 +243,8 @@
             
             const agrupado = [];
             carrito.forEach(x => {
-                if (x.id === 'ABONO') {
+                if (x.id === 'ABONO' || x.id === 'RECARGA') {
+                    // Los abonos y recargas no se agrupan por cantidad si son distintos montos/números, se mandan como items individuales
                     agrupado.push({codigo: x.id, cantidad: 1, precio: x.p});
                 } else {
                     let item = agrupado.find(i => i.codigo === x.id);
@@ -224,6 +255,7 @@
                 if(!corte[x.id]) corte[x.id] = {cant: 0, total: 0};
                 corte[x.id].cant++; corte[x.id].total += x.p;
             });
+            
             try {
                 const res = await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: agrupado})});
                 const result = await res.json();
@@ -233,21 +265,37 @@
                     localStorage.removeItem('backup_venta');
                     alert("✅ Registro Exitoso");
                     carrito = []; actualizar(); cerrarCobro();
-                } else { throw new Error(result.msg); }
-            } catch(e) { alert("Error de conexión. Se guardó respaldo local."); console.error(e); }
+                } else { 
+                    throw new Error(result.msg);
+                }
+            } catch(e) { 
+                alert("Error de conexión. Se guardó respaldo local.");
+                console.error(e); 
+            }
             document.getElementById('loading').style.display = 'none';
         }
 
         async function enviarManual(data) { 
-            document.getElementById('loading').style.display = 'flex'; document.getElementById('loading').style.opacity = '1'; 
-            try { await fetch(URL, {method: 'POST', body: JSON.stringify(data)}); alert("✅ Registro Exitoso"); } catch(e) { alert("Error al enviar datos."); } 
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading').style.opacity = '1'; 
+            try { 
+                await fetch(URL, {method: 'POST', body: JSON.stringify(data)}); 
+                alert("✅ Registro Exitoso");
+            } catch(e) { 
+                alert("Error al enviar datos."); 
+            } 
             document.getElementById('loading').style.display = 'none';
         }
         
         async function ajusteInv(modo) { 
             let d = { tipo: "AJUSTE_INV", modo: modo };
-            if(modo == "TRASPASO") { d.origen = prompt("Sucursal Origen:"); d.destino = prompt("Sucursal Destino:"); } else { d.ubicacion = prompt("Sucursal:"); } 
-            d.codigo = prompt("Código:"); d.cantidad = prompt("Cantidad:"); if(d.codigo && d.cantidad) enviarManual(d);
+            if(modo == "TRASPASO") { 
+                d.origen = prompt("Sucursal Origen:"); d.destino = prompt("Sucursal Destino:"); 
+            } else { 
+                d.ubicacion = prompt("Sucursal:");
+            } 
+            d.codigo = prompt("Código:"); d.cantidad = prompt("Cantidad:");
+            if(d.codigo && d.cantidad) enviarManual(d);
         }
         
         async function modalEquipo() { 
@@ -262,24 +310,35 @@
             let tVentas = 0;
             let tAbonos = 0;
             let tGastos = 0;
+            let tRecargas = 0;
             let tTotalCaja = 0;
-
+            
             for(let id in corte) {
                 let isGas = id.startsWith('GAS:');
                 let isAbono = id === 'ABONO';
+                let isRecarga = id === 'RECARGA';
                 let isNeg = corte[id].total < 0;
                 
-                let colorClass = isGas ? "text-red-400" : (isAbono ? "text-green-500" : "text-slate-600");
+                let colorClass = isGas ? "text-red-400" : (isAbono ? "text-green-500" : (isRecarga ? "text-purple-500" : "text-slate-600"));
                 let montoFormat = isNeg ? "-$" + Math.abs(corte[id].total).toFixed(2) : "$" + corte[id].total.toFixed(2);
                 
                 h += `<div class="flex justify-between border-b py-2 italic font-black uppercase text-[9px] ${colorClass}"><span>${corte[id].cant}x ${id}</span><span>${montoFormat}</span></div>`;
                 
                 // Clasificamos los totales
-                if(isGas) { tGastos += Math.abs(corte[id].total); }
-                else if(isAbono) { tAbonos += corte[id].total; }
-                else { tVentas += corte[id].total; }
+                if(isGas) { 
+                    tGastos += Math.abs(corte[id].total);
+                }
+                else if(isAbono) { 
+                    tAbonos += corte[id].total;
+                }
+                else if (isRecarga) {
+                    tRecargas += corte[id].total;
+                }
+                else { 
+                    tVentas += corte[id].total;
+                }
                 
-                tTotalCaja += corte[id].total; 
+                tTotalCaja += corte[id].total;
             }
 
             document.getElementById('corte-lista').innerHTML = h || "<p class='text-center py-10 opacity-30'>Vacío</p>";
@@ -288,7 +347,9 @@
             let breakdownHTML = `
                 <div class="text-[10px] text-white opacity-80 flex justify-between uppercase mb-1"><span>Ventas Accesorios/Rep:</span><span>$${tVentas.toFixed(2)}</span></div>
                 <div class="text-[10px] text-green-400 flex justify-between uppercase mb-1"><span>Abonos Recibidos:</span><span>$${tAbonos.toFixed(2)}</span></div>
+                <div class="text-[10px] text-purple-400 flex justify-between uppercase mb-1"><span>Recargas Realizadas:</span><span>$${tRecargas.toFixed(2)}</span></div>
                 <div class="text-[10px] text-red-400 flex justify-between uppercase mb-2"><span>Gastos (Salidas):</span><span>-$${tGastos.toFixed(2)}</span></div>
+           
                 <div class="border-t border-blue-700 pt-2 text-[10px] text-white font-bold uppercase tracking-wider text-center mt-2">Total en Caja Físico</div>
                 <div class="text-yellow-400 text-3xl font-black text-center mt-1">$${tTotalCaja.toFixed(2)}</div>
             `;
@@ -303,12 +364,15 @@
             // Aquí tomamos SOLO el dinero de los Accesorios/Reparaciones (cortePuro)
             const t = window.cortePuro || "0.00";
             
-            if(confirm(`¿Cerrar turno? Se registrará un CORTE por $${t} en la matriz (No incluye abonos ni gastos).`)) {
+            if(confirm(`¿Cerrar turno? Se limpiará el dispositivo y se preparará para el siguiente turno.`)) {
                 document.getElementById('loading').style.display = 'flex';
                 try {
                     await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: [], corteX: t})});
-                    localStorage.removeItem('backup_corte'); window.location.reload();
-                } catch(e) { alert("Error al cerrar turno."); }
+                    localStorage.removeItem('backup_corte'); 
+                    window.location.reload();
+                } catch(e) { 
+                    alert("Error al cerrar turno."); 
+                }
                 document.getElementById('loading').style.display = 'none';
             }
         }
