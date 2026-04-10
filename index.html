@@ -129,17 +129,17 @@
 
     <script>
         // --- NUEVA URL DE APPS SCRIPT AQUÍ ---
-        const URL = "https://script.google.com/macros/s/AKfycbx_mEkOhXewatPprlStILfS4CidpNzNA17PcSARjk82NadtXl8TFkXeyscNSSkHRu3VLg/exec";
+        const URL = "https://script.google.com/macros/s/AKfycbxRDX16w1msRiy2Jaw4-z7FiYjQQjWG1ixpEmMfT8JPKVEhArqS2OX7RGEqCNhORdSk/exec";
         
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
-        
+
         window.onload = async () => {
             try {
                 const res = await fetch(URL + "?action=getUsers");
                 if (!res.ok) throw new Error('Network error');
                 USERS = await res.json();
                 document.getElementById('sel-u').innerHTML = USERS.map(u => `<option>${u.nombre}</option>`).join('');
-                
+
                 const memoU = localStorage.getItem('lastU'), memoS = localStorage.getItem('lastS');
                 if(memoU) document.getElementById('sel-u').value = memoU;
                 if(memoS) document.getElementById('sel-s').value = memoS;
@@ -179,7 +179,7 @@
                 
                 document.getElementById('loading').style.display = 'none';
             } else { 
-                alert("PIN Incorrecto."); 
+                alert("PIN Incorrecto.");
             }
         }
 
@@ -227,7 +227,7 @@
                 const m = prompt("MONTO ABONO:");
                 if(m > 0) add(id, n, parseFloat(m));
             } else { 
-                add(id, n, p); 
+                add(id, n, p);
             }
         }
 
@@ -278,7 +278,6 @@
                 if(!corte[x.id]) corte[x.id] = {cant: 0, total: 0};
                 corte[x.id].cant++; corte[x.id].total += x.p;
             });
-            
             try {
                 const res = await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: agrupado})});
                 const result = await res.json();
@@ -302,10 +301,10 @@
             document.getElementById('loading').style.display = 'flex';
             document.getElementById('loading').style.opacity = '1'; 
             try { 
-                await fetch(URL, {method: 'POST', body: JSON.stringify(data)}); 
+                await fetch(URL, {method: 'POST', body: JSON.stringify(data)});
                 alert("✅ Registro Exitoso");
             } catch(e) { 
-                alert("Error al enviar datos."); 
+                alert("Error al enviar datos.");
             } 
             document.getElementById('loading').style.display = 'none';
         }
@@ -313,7 +312,8 @@
         async function ajusteInv(modo) { 
             let d = { tipo: "AJUSTE_INV", modo: modo };
             if(modo == "TRASPASO") { 
-                d.origen = prompt("Sucursal Origen:"); d.destino = prompt("Sucursal Destino:"); 
+                d.origen = prompt("Sucursal Origen:");
+                d.destino = prompt("Sucursal Destino:"); 
             } else { 
                 d.ubicacion = prompt("Sucursal:");
             } 
@@ -330,7 +330,6 @@
             document.getElementById('sidebar').classList.toggle('closed');
             let h = "";
             let tVentas = 0, tAbonos = 0, tGastos = 0, tRecargas = 0, tReparaciones = 0, tTotalCaja = 0;
-            
             for(let id in corte) {
                 let isGas = id.startsWith('GAS:');
                 let isAbono = id === 'ABONO';
@@ -342,7 +341,6 @@
                 let montoFormat = isNeg ? "-$" + Math.abs(corte[id].total).toFixed(2) : "$" + corte[id].total.toFixed(2);
                 
                 h += `<div class="flex justify-between border-b py-3 italic font-black uppercase text-xs ${colorClass} border-slate-700"><span>${corte[id].cant}x ${id}</span><span>${montoFormat}</span></div>`;
-                
                 if(isGas) { tGastos += Math.abs(corte[id].total); }
                 else if(isAbono) { tAbonos += corte[id].total; }
                 else if (isRecarga) { tRecargas += corte[id].total; }
@@ -360,7 +358,6 @@
                 <div class="text-xs text-emerald-400 flex justify-between uppercase mb-2"><span>Abonos:</span><span>$${tAbonos.toFixed(2)}</span></div>
                 <div class="text-xs text-teal-400 flex justify-between uppercase mb-2"><span>Recargas:</span><span>$${tRecargas.toFixed(2)}</span></div>
                 <div class="text-xs text-red-400 flex justify-between uppercase mb-3"><span>Gastos:</span><span>-$${tGastos.toFixed(2)}</span></div>
-           
                 <div class="border-t border-slate-600 pt-3 text-xs text-slate-200 font-bold uppercase tracking-wider text-center mt-3">Efectivo Total Físico</div>
                 <div class="text-emerald-400 text-4xl font-black text-center mt-2">$${tTotalCaja.toFixed(2)}</div>
             `;
@@ -377,7 +374,7 @@
                     localStorage.removeItem('backup_corte'); 
                     window.location.reload();
                 } catch(e) { 
-                    alert("Error al cerrar turno."); 
+                    alert("Error al cerrar turno.");
                 }
                 document.getElementById('loading').style.display = 'none';
             }
