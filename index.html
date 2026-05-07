@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -128,18 +128,18 @@
     </div>
 
     <script>
-        // --- TU URL CORRECTA DEL PUNTO DE VENTA ESTÁ AQUÍ ---
-        const URL = "https://script.google.com/macros/s/AKfycbzv3J4cLER2J7fgmCkA6tpnB645gX-dAJ-cgv40nBg_dXV66KCoYkz4-e9N6isCe7HQCw/exec";
+        // --- URL ACTUALIZADA ---
+        const URL = "https://script.google.com/macros/s/AKfycbwSg_MoSzXiU2-VmwUDNXM855cnzI_O7mdOTIbR61lOeXQT_tIgyv0rc3tpMWL5WBeSUw/exec";
         
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
-
+        
         window.onload = async () => {
             try {
                 const res = await fetch(URL + "?action=getUsers");
                 if (!res.ok) throw new Error('Network error');
                 USERS = await res.json();
                 document.getElementById('sel-u').innerHTML = USERS.map(u => `<option>${u.nombre}</option>`).join('');
-
+                
                 const memoU = localStorage.getItem('lastU'), memoS = localStorage.getItem('lastS');
                 if(memoU) document.getElementById('sel-u').value = memoU;
                 if(memoS) document.getElementById('sel-s').value = memoS;
@@ -321,9 +321,30 @@
             if(d.codigo && d.cantidad) enviarManual(d);
         }
         
+        // --- FUNCIÓN DE EQUIPO MODIFICADA ---
         async function modalEquipo() { 
-            const m = prompt("Modelo:"), i = prompt("IMEI:"), n = prompt("Número:"), c = prompt("Cliente:"), e = prompt("Enganche:");
-            if(m && i) enviarManual({tipo: "EQUIPO", modelo: m, imei: i, numero: n, nombre: c, enganche: e, sucursal: vSuc, vendedor: vNom});
+            const m = prompt("Modelo:");
+            const i = prompt("IMEI:");
+            const n = prompt("Número:");
+            const c = prompt("Cliente:");
+            const e = prompt("Enganche:");
+            const p = prompt("Plataforma:");
+            const a = prompt("Ajuste de Enganche:");
+
+            if(m && i) {
+                enviarManual({
+                    tipo: "EQUIPO", 
+                    modelo: m, 
+                    imei: i, 
+                    numero: n, 
+                    nombre: c, 
+                    enganche: e, 
+                    plataforma: p,          // Se envía la plataforma
+                    ajuste_enganche: a,     // Se envía el ajuste
+                    sucursal: vSuc, 
+                    vendedor: vNom
+                });
+            }
         }
 
         function toggleSidebar() {
@@ -341,6 +362,7 @@
                 let montoFormat = isNeg ? "-$" + Math.abs(corte[id].total).toFixed(2) : "$" + corte[id].total.toFixed(2);
                 
                 h += `<div class="flex justify-between border-b py-3 italic font-black uppercase text-xs ${colorClass} border-slate-700"><span>${corte[id].cant}x ${id}</span><span>${montoFormat}</span></div>`;
+                
                 if(isGas) { tGastos += Math.abs(corte[id].total); }
                 else if(isAbono) { tAbonos += corte[id].total; }
                 else if (isRecarga) { tRecargas += corte[id].total; }
