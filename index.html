@@ -1,37 +1,26 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Credicel POS V18.0 - Abonos Update</title>
+    <title>Credicel POS V18.1 - Abonos Update</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Modo Oscuro Vanguardista: Fondos Slate (Gris Profundo) y Acentos Esmeralda */
         html, body { height: 100%; margin: 0; padding: 0; background: #0f172a; font-family: ui-sans-serif, system-ui, sans-serif; overflow: hidden; color: #f8fafc;}
         .app-container { display: flex; flex-direction: column; height: 100vh; height: -webkit-fill-available;}
         header { flex-shrink: 0; z-index: 50; padding-top: env(safe-area-inset-top, 0.75rem);}
-        
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 0.8rem; padding: 1rem;}
-        
-        /* Tarjetas Modo Oscuro */
         .product-card { transition: all 0.1s; border: 1px solid #334155; cursor: pointer; user-select: none; display: flex; flex-direction: column; justify-content: space-between; height: 135px; background: #1e293b; border-radius: 1rem; padding: 0.8rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);}
         .product-card:active { transform: scale(0.95); background-color: #064e3b;}
-        
-        /* Gradiente Oscuro Elegante para Header */
         .dark-gradient { background: linear-gradient(135deg, #022c22 0%, #065f46 100%); border-bottom: 1px solid #047857;}
-        
-        /* Sidebar Oscuro */
         .sidebar { transition: transform 0.3s ease-in-out; width: 85%; max-width: 350px; position: fixed; inset: 0 auto 0 0; z-index: 300; background: #1e293b; border-right: 5px solid #10b981; box-shadow: 10px 0 25px rgba(0,0,0,0.5);}
         .sidebar.closed { transform: translateX(-100%);}
         .content-main { flex: 1; display: flex; overflow: hidden;}
         .scroll-area { overflow-y: auto; -webkit-overflow-scrolling: touch;}
         #loading { display: flex; transition: opacity 0.3s ease;}
-        
-        /* Scrollbar estilizado para modo oscuro */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        
         @media (max-width: 768px) { .content-main { flex-direction: column; } .cart-panel { width: 100% !important; height: 45%; border-left: 0; border-top: 3px solid #334155;} }
     </style>
 </head>
@@ -47,9 +36,11 @@
 
     <div class="app-container">
         <header class="dark-gradient text-white shadow-lg flex flex-wrap gap-3 items-center justify-between p-4">
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-3 items-center">
                 <button onclick="toggleSidebar()" class="bg-slate-800 border border-slate-600 text-emerald-400 hover:bg-slate-700 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-md active:scale-90 transition">CORTE</button>
                 <button onclick="modalEquipo()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl font-black text-xs uppercase shadow-md active:scale-90 transition">EQUIPO</button>
+                <span class="bg-emerald-900 text-emerald-300 px-2 py-1 rounded text-[10px] font-black border border-emerald-700 tracking-widest shadow-inner">V18.1</span>
+                
                 <div id="admin-tools" class="hidden flex flex-wrap gap-2">
                     <button onclick="ajusteInv('ENTRADA')" class="bg-slate-700 border border-slate-600 text-emerald-300 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-sm">Entrada</button>
                     <button onclick="ajusteInv('SALIDA')" class="bg-slate-700 border border-red-900 text-red-400 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-sm">Ajuste</button>
@@ -128,7 +119,6 @@
     </div>
 
     <script>
-        // --- URL ACTUALIZADA SEGÚN LO SOLICITADO ---
         const URL = "https://script.google.com/macros/s/AKfycbxyaQ1TWkCyCJYOJgtvSWesGat54K_9PRKETJR3IhJiBu0DAUxVok33HEJXI2mJI_bFpQ/exec";
         
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
@@ -224,7 +214,6 @@
                     }
                 }
             } else if(id === 'ABONO') {
-                // --- AQUÍ ESTÁ LA MODIFICACIÓN DE LA PLATAFORMA ---
                 const m = prompt("MONTO ABONO:");
                 if(m > 0) {
                     const plat = prompt("PLATAFORMA DEL ABONO (Ej. Efectivo, Tarjeta, Traspaso):");
@@ -325,7 +314,6 @@
             if(d.codigo && d.cantidad) enviarManual(d);
         }
         
-        // --- FUNCIÓN DE EQUIPO MODIFICADA ---
         async function modalEquipo() { 
             const m = prompt("Modelo:");
             const i = prompt("IMEI:");
