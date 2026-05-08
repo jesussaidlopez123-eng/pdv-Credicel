@@ -128,8 +128,8 @@
     </div>
 
     <script>
-        // --- URL ORIGINAL MANTENIDA SEGÚN TU ARCHIVO BASE ---
-        const URL = "https://script.google.com/macros/s/AKfycbwSg_MoSzXiU2-VmwUDNXM855cnzI_O7mdOTIbR61lOeXQT_tIgyv0rc3tpMWL5WBeSUw/exec";
+        // --- URL ACTUALIZADA QUE ME PROPORCIONASTE ---
+        const URL = "https://script.google.com/macros/s/AKfycbxUSoRSlNpN07LqND8gWegcxtKOIdpBlJAaaL1kb5vKIypIYO0YbjCDk-Ojfd5dZVZa/exec";
         
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
         
@@ -192,11 +192,11 @@
                 </div>`).join('');
         }
 
-        // --- FUNCIÓN BLINDADA CONTRA ERRORES DE TEXTO/ESPACIOS ---
+        // --- FUNCIÓN BLINDADA PARA QUE RECONOZCA BIEN EL ABONO ---
         function clickProd(id, n, p) {
-            let cleanId = id.toString().trim().toUpperCase();
+            let idLimpio = id.toString().trim().toUpperCase();
 
-            if(cleanId === 'GAS') {
+            if(idLimpio === 'GAS') {
                 const con = prompt("CONCEPTO DEL GASTO:");
                 const mon = prompt("MONTO DEL GASTO:");
                 if(con && mon > 0) {
@@ -209,13 +209,13 @@
                     corte[gastoNombre].total -= gastoF; 
                     localStorage.setItem('backup_corte', JSON.stringify(corte));
                 }
-            } else if(cleanId === 'RECARGA') {
+            } else if(idLimpio === 'RECARGA') {
                 const num = prompt("NÚMERO DE TELÉFONO:");
                 if (num) {
                     const mon = prompt("MONTO DE LA RECARGA:");
                     if (mon > 0) add(id, "RECARGA: " + num, parseFloat(mon));
                 }
-            } else if(cleanId === 'REP') {
+            } else if(idLimpio === 'REP') {
                 const modelo = prompt("MODELO DEL EQUIPO:");
                 if (modelo) {
                     const tipo = prompt("TIPO DE REPARACIÓN:");
@@ -226,12 +226,13 @@
                         }
                     }
                 }
-            } else if(cleanId === 'ABONO') {
-                // AQUÍ AGREGAMOS LA VENTANA DE PLATAFORMA
-                const m = prompt("MONTO ABONO:");
-                if(m > 0) {
+            } else if(idLimpio === 'ABONO') {
+                // AQUÍ PEDIMOS EL MONTO Y LUEGO LA PLATAFORMA
+                const m = prompt("MONTO DEL ABONO:");
+                const montoFinal = parseFloat(m);
+                if(montoFinal > 0) {
                     const plat = prompt("PLATAFORMA DEL ABONO (Ej. Efectivo, Tarjeta, Traspaso):");
-                    add(id, n, parseFloat(m), {plataforma: plat});
+                    add('ABONO', n, montoFinal, {plataforma: plat});
                 }
             } else { 
                 add(id, n, p);
@@ -345,8 +346,8 @@
                     numero: n, 
                     nombre: c, 
                     enganche: e, 
-                    plataforma: p,          
-                    ajuste_enganche: a,     
+                    plataforma: p,          // Se envía la plataforma
+                    ajuste_enganche: a,     // Se envía el ajuste
                     sucursal: vSuc, 
                     vendedor: vNom
                 });
@@ -410,3 +411,4 @@
     </script>
 </body>
 </html>
+      
