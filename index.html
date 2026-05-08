@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Credicel POS V17.8 - Abonos Update</title>
+    <title>Credicel POS V18.0 - Abonos Update</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Modo Oscuro Vanguardista: Fondos Slate (Gris Profundo) y Acentos Esmeralda */
@@ -128,8 +128,8 @@
     </div>
 
     <script>
-        // --- URL ACTUALIZADA ---
-        const URL = "https://script.google.com/macros/s/AKfycbz8_-N9g2YKUNLtXLZZlbKefF3s0tKo0gHf1KOC0498fMM6Vl6xbqEr9V-DOHs7PiwLeA/exec";
+        // --- URL ACTUALIZADA SEGÚN LO SOLICITADO ---
+        const URL = "https://script.google.com/macros/s/AKfycbxyaQ1TWkCyCJYOJgtvSWesGat54K_9PRKETJR3IhJiBu0DAUxVok33HEJXI2mJI_bFpQ/exec";
         
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
         
@@ -224,10 +224,11 @@
                     }
                 }
             } else if(id === 'ABONO') {
+                // --- AQUÍ ESTÁ LA MODIFICACIÓN DE LA PLATAFORMA ---
                 const m = prompt("MONTO ABONO:");
                 if(m > 0) {
-                    const plataforma = prompt("PLATAFORMA DEL ABONO:");
-                    add(id, n, parseFloat(m), {plataforma: plataforma});
+                    const plat = prompt("PLATAFORMA DEL ABONO (Ej. Efectivo, Tarjeta, Traspaso):");
+                    add(id, n, parseFloat(m), {plataforma: plat});
                 }
             } else { 
                 add(id, n, p);
@@ -342,8 +343,8 @@
                     numero: n, 
                     nombre: c, 
                     enganche: e, 
-                    plataforma: p,          // Se envía la plataforma
-                    ajuste_enganche: a,     // Se envía el ajuste
+                    plataforma: p,          
+                    ajuste_enganche: a,     
                     sucursal: vSuc, 
                     vendedor: vNom
                 });
