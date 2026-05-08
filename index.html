@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Credicel POS V17.5 - Dark Mode Edition</title>
+    <title>Credicel POS V18.5 - Abonos Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Modo Oscuro Vanguardista: Fondos Slate (Gris Profundo) y Acentos Esmeralda */
@@ -128,7 +128,7 @@
     </div>
 
     <script>
-        // --- URL ACTUALIZADA QUE ME PROPORCIONASTE ---
+        // --- URL ACTUALIZADA Y CONFIRMADA ---
         const URL = "https://script.google.com/macros/s/AKfycbxUSoRSlNpN07LqND8gWegcxtKOIdpBlJAaaL1kb5vKIypIYO0YbjCDk-Ojfd5dZVZa/exec";
         
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
@@ -192,9 +192,9 @@
                 </div>`).join('');
         }
 
-        // --- FUNCIÓN BLINDADA PARA QUE RECONOZCA BIEN EL ABONO ---
+        // --- FUNCIÓN BLINDADA PARA ABONOS ---
         function clickProd(id, n, p) {
-            let idLimpio = id.toString().trim().toUpperCase();
+            let idLimpio = String(id).trim().toUpperCase();
 
             if(idLimpio === 'GAS') {
                 const con = prompt("CONCEPTO DEL GASTO:");
@@ -215,7 +215,7 @@
                     const mon = prompt("MONTO DE LA RECARGA:");
                     if (mon > 0) add(id, "RECARGA: " + num, parseFloat(mon));
                 }
-            } else if(idLimpio === 'REP') {
+            } else if(idLimpio === 'REP' || idLimpio === 'REPARACION') {
                 const modelo = prompt("MODELO DEL EQUIPO:");
                 if (modelo) {
                     const tipo = prompt("TIPO DE REPARACIÓN:");
@@ -227,12 +227,23 @@
                     }
                 }
             } else if(idLimpio === 'ABONO') {
-                // AQUÍ PEDIMOS EL MONTO Y LUEGO LA PLATAFORMA
-                const m = prompt("MONTO DEL ABONO:");
-                const montoFinal = parseFloat(m);
-                if(montoFinal > 0) {
-                    const plat = prompt("PLATAFORMA DEL ABONO (Ej. Efectivo, Tarjeta, Traspaso):");
-                    add('ABONO', n, montoFinal, {plataforma: plat});
+                const m = prompt("PASO 1: Escribe el MONTO del Abono:");
+                
+                if(m !== null && m.trim() !== "") {
+                    const montoFinal = parseFloat(m);
+                    
+                    if(montoFinal > 0) {
+                        const plat = prompt("PASO 2: Escribe la PLATAFORMA (Efectivo, Tarjeta, Traspaso):");
+                        let plataformaFinal = "Efectivo";
+                        
+                        if(plat !== null && plat.trim() !== "") {
+                            plataformaFinal = plat.trim();
+                        }
+                        
+                        add('ABONO', n, montoFinal, {plataforma: plataformaFinal});
+                    } else {
+                        alert("El monto debe ser mayor a cero.");
+                    }
                 }
             } else { 
                 add(id, n, p);
@@ -346,8 +357,8 @@
                     numero: n, 
                     nombre: c, 
                     enganche: e, 
-                    plataforma: p,          // Se envía la plataforma
-                    ajuste_enganche: a,     // Se envía el ajuste
+                    plataforma: p,          
+                    ajuste_enganche: a,     
                     sucursal: vSuc, 
                     vendedor: vNom
                 });
@@ -411,4 +422,3 @@
     </script>
 </body>
 </html>
-      
