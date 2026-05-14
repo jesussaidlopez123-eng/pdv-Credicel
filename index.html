@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Credicel POS V18.6 - Dark Dashboard Edition</title>
+    <title>Credicel POS V18.6 - Dark Dashboard Edition + LÁSER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Modo Oscuro Dashboard Premium */
@@ -49,9 +49,11 @@
 
     <div class="app-container">
         <header class="dark-gradient text-white flex flex-wrap gap-3 items-center justify-between p-4">
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-3 items-center">
                 <button onclick="toggleSidebar()" class="bg-slate-800/80 border border-slate-700 text-emerald-400 hover:bg-slate-700 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-md active:scale-90 transition backdrop-blur-sm">CORTE</button>
                 <button onclick="modalEquipo()" class="bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-500 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-md shadow-emerald-900/30 active:scale-90 transition backdrop-blur-sm">EQUIPO</button>
+                
+                <input type="text" id="scanner-input" class="bg-[#1e293b] border border-slate-700 text-emerald-400 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-inner outline-none focus:border-emerald-500 transition w-48 placeholder-slate-500" placeholder="🔍 ESCANEAR..." autocomplete="off">
                 <div id="admin-tools" class="hidden flex flex-wrap gap-2">
                     <button onclick="ajusteInv('ENTRADA')" class="bg-slate-800/80 border border-slate-700 text-emerald-300 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-sm">Entrada</button>
                     <button onclick="ajusteInv('SALIDA')" class="bg-slate-800/80 border border-red-900/50 text-red-400 px-4 py-3 rounded-xl font-black text-xs uppercase shadow-sm">Ajuste</button>
@@ -83,15 +85,11 @@
     <div id="modal-login" class="fixed inset-0 bg-[#090c15]/95 z-[400] flex items-center justify-center p-4 backdrop-blur-xl">
         <div class="w-full max-w-md border border-slate-800 p-8 rounded-3xl shadow-2xl text-center bg-[#0f172a]">
             <h1 class="text-5xl font-black text-white italic mb-8 uppercase tracking-wide">Credi<span class="text-emerald-500">cel</span></h1>
-            
             <select id="sel-u" class="w-full p-5 border border-slate-700 rounded-xl mb-4 font-bold text-xl bg-[#1e293b] text-slate-200 outline-none focus:border-emerald-500 transition shadow-inner"></select>
-            
             <select id="sel-s" class="w-full p-5 border border-slate-700 rounded-xl mb-4 font-bold text-xl bg-[#1e293b] text-slate-200 outline-none focus:border-emerald-500 transition shadow-inner">
                 <option>Navojoa</option><option>Huatabampo</option><option>Bodega</option>
             </select>
-            
             <input id="pin" type="password" inputmode="numeric" maxlength="6" class="w-full p-5 border border-slate-700 rounded-xl text-center text-3xl tracking-[15px] mb-6 outline-none bg-[#1e293b] text-white placeholder-slate-500 focus:border-emerald-500 transition shadow-inner" placeholder="****">
-            
             <button onclick="login()" class="w-full bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-white py-6 rounded-2xl font-black text-xl uppercase shadow-lg shadow-emerald-900/30 active:scale-95 transition">Entrar al Sistema</button>
         </div>
     </div>
@@ -104,14 +102,11 @@
                 <button onclick="quickPay(200)" class="bg-[#1e293b] border border-slate-700 py-5 rounded-xl font-black text-xl text-emerald-400 hover:bg-slate-700 hover:border-emerald-500 transition">$200</button>
                 <button onclick="quickPay(500)" class="bg-[#1e293b] border border-slate-700 py-5 rounded-xl font-black text-xl text-emerald-400 hover:bg-slate-700 hover:border-emerald-500 transition">$500</button>
             </div>
-            
             <input type="number" id="pago-cliente" oninput="calcCambio()" class="w-full p-5 border border-slate-700 rounded-xl text-center text-4xl font-black mb-6 outline-none bg-[#1e293b] text-white focus:border-emerald-500 transition shadow-inner" placeholder="0.00">
-            
             <div class="p-5 bg-[#064e3b]/30 border border-emerald-800/50 rounded-xl mb-6 text-emerald-100 font-black">
                 <p class="text-xs uppercase opacity-70 leading-none mb-1 text-emerald-300">Cambio a entregar:</p>
                 <p class="text-5xl">$ <span id="cambio-v">0.00</span></p>
             </div>
-            
             <button onclick="finalizarVenta()" class="w-full py-5 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-white rounded-xl font-black text-xl uppercase shadow-lg shadow-emerald-900/40 transition active:scale-95">Registrar Venta</button>
             <button onclick="cerrarCobro()" class="mt-6 text-xs font-bold underline uppercase block mx-auto text-slate-500 hover:text-slate-300 tracking-wider">Volver al carrito</button>
         </div>
@@ -123,16 +118,12 @@
             <button onclick="toggleSidebar()" class="text-4xl font-light text-slate-500 hover:text-emerald-400 transition">&times;</button>
         </div>
         <div id="corte-lista" class="flex-1 scroll-area text-xs font-bold text-slate-400 space-y-3"></div>
-        
         <div class="p-5 bg-[#0b0f19] border border-slate-800 rounded-2xl my-4 text-left shadow-inner" id="total-corte"></div>
-        
         <button onclick="enviarCorte()" class="w-full bg-red-900/80 hover:bg-red-800 border border-red-800 text-red-100 py-5 rounded-xl font-black uppercase text-sm shadow-lg transition active:scale-95">Cerrar Turno Oficial</button>
     </div>
 
     <script>
-        // --- URL FUNCIONAL ACTUALIZADA ---
         const URL = "https://script.google.com/macros/s/AKfycbwey07xR5IRAAyP5EhkcEM-AYXKKYycxTL6HUsSwnFM1xdvhmAHkNepmTN8K_CHSAxh6Q/exec";
-        
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
         
         window.onload = async () => {
@@ -141,7 +132,6 @@
                 if (!res.ok) throw new Error('Network error');
                 USERS = await res.json();
                 document.getElementById('sel-u').innerHTML = USERS.map(u => `<option>${u.nombre}</option>`).join('');
-                
                 const memoU = localStorage.getItem('lastU'), memoS = localStorage.getItem('lastS');
                 if(memoU) document.getElementById('sel-u').value = memoU;
                 if(memoS) document.getElementById('sel-s').value = memoS;
@@ -180,6 +170,8 @@
                 } catch (e) { alert("Error al cargar productos."); }
                 
                 document.getElementById('loading').style.display = 'none';
+                // Enfocar escáner al entrar
+                setTimeout(() => document.getElementById('scanner-input').focus(), 300);
             } else { 
                 alert("PIN Incorrecto.");
             }
@@ -194,10 +186,8 @@
                 </div>`).join('');
         }
 
-        // --- FUNCIÓN BLINDADA CON TÍTULOS SIMPLIFICADOS ---
         function clickProd(id, n, p) {
             let idLimpio = String(id).trim().toUpperCase();
-
             if(idLimpio === 'GAS') {
                 const con = prompt("CONCEPTO:");
                 const mon = prompt("MONTO:");
@@ -229,21 +219,13 @@
                     }
                 }
             } else if(idLimpio === 'ABONO') {
-                
-                // Instrucciones directas (sólo títulos)
                 const m = prompt("MONTO:");
-                
                 if(m !== null && m.trim() !== "") {
                     const montoFinal = parseFloat(m);
-                    
                     if(montoFinal > 0) {
                         const plat = prompt("PLATAFORMA:");
                         let plataformaFinal = "Efectivo";
-                        
-                        if(plat !== null && plat.trim() !== "") {
-                            plataformaFinal = plat.trim();
-                        }
-                        
+                        if(plat !== null && plat.trim() !== "") { plataformaFinal = plat.trim(); }
                         add('ABONO', n, montoFinal, {plataforma: plataformaFinal});
                     } else {
                         alert("El monto debe ser mayor a cero.");
@@ -269,14 +251,21 @@
             document.getElementById('t-v').innerText = carrito.reduce((a, b) => a + b.p, 0).toFixed(2);
         }
 
-        function del(i) { 
-            carrito.splice(i, 1);
-            localStorage.setItem('backup_venta', JSON.stringify(carrito)); 
-            actualizar(); 
-        }
+        function del(i) { carrito.splice(i, 1); localStorage.setItem('backup_venta', JSON.stringify(carrito)); actualizar(); }
         function limpiarVenta() { carrito = []; localStorage.removeItem('backup_venta'); actualizar(); }
-        function abrirCobro() { if(carrito.length > 0) document.getElementById('modal-cobro').style.display = 'flex'; }
-        function cerrarCobro() { document.getElementById('modal-cobro').style.display = 'none'; }
+        
+        function abrirCobro() { 
+            if(carrito.length > 0) {
+                document.getElementById('modal-cobro').style.display = 'flex';
+                setTimeout(() => document.getElementById('pago-cliente').focus(), 100);
+            }
+        }
+        
+        function cerrarCobro() { 
+            document.getElementById('modal-cobro').style.display = 'none';
+            document.getElementById('scanner-input').focus();
+        }
+        
         function quickPay(n) { document.getElementById('pago-cliente').value = n; calcCambio(); }
         
         function calcCambio() { 
@@ -354,18 +343,7 @@
             const a = prompt("AJUSTE ENGANCHE:");
 
             if(m && i) {
-                enviarManual({
-                    tipo: "EQUIPO", 
-                    modelo: m, 
-                    imei: i, 
-                    numero: n, 
-                    nombre: c, 
-                    enganche: e, 
-                    plataforma: p,          
-                    ajuste_enganche: a,     
-                    sucursal: vSuc, 
-                    vendedor: vNom
-                });
+                enviarManual({ tipo: "EQUIPO", modelo: m, imei: i, numero: n, nombre: c, enganche: e, plataforma: p, ajuste_enganche: a, sucursal: vSuc, vendedor: vNom });
             }
         }
 
@@ -384,7 +362,6 @@
                 let montoFormat = isNeg ? "-$" + Math.abs(corte[id].total).toFixed(2) : "$" + corte[id].total.toFixed(2);
                 
                 h += `<div class="flex justify-between border-b py-3 italic font-black uppercase text-xs ${colorClass} border-slate-700/50"><span>${corte[id].cant}x ${id}</span><span>${montoFormat}</span></div>`;
-                
                 if(isGas) { tGastos += Math.abs(corte[id].total); }
                 else if(isAbono) { tAbonos += corte[id].total; }
                 else if (isRecarga) { tRecargas += corte[id].total; }
@@ -423,6 +400,42 @@
                 document.getElementById('loading').style.display = 'none';
             }
         }
+
+        // ==========================================
+        // --- MOTOR DEL ESCÁNER LÁSER CREDICEL ---
+        // ==========================================
+        const scannerInput = document.getElementById('scanner-input');
+        
+        // Mantener el escáner listo para recibir el láser si teclean fuera (Evita errores humanos)
+        document.addEventListener('keydown', (e) => {
+            const isModalOpen = document.getElementById('modal-login').style.display !== 'none' || document.getElementById('modal-cobro').style.display === 'flex';
+            if (!isModalOpen && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                scannerInput.focus();
+            }
+        });
+
+        // Detectar el disparo del escáner
+        scannerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Evita recargar la página
+                let cod = scannerInput.value.trim().toUpperCase();
+                scannerInput.value = ''; // Limpiar barra para el siguiente producto rápido
+                
+                if (cod !== '') {
+                    // Buscar el código en el inventario cargado
+                    let prod = PRODS.find(x => String(x.id).trim().toUpperCase() === cod);
+                    
+                    if (prod) {
+                        // Enviar al carrito de la misma forma en la que daban clic manual
+                        clickProd(prod.id, prod.n, prod.p);
+                    } else {
+                        // Alerta si escanean algo que no existe
+                        alert("⚠️ CÓDIGO NO REGISTRADO EN INVENTARIO: " + cod);
+                    }
+                }
+            }
+        });
+        // ==========================================
     </script>
 </body>
 </html>
