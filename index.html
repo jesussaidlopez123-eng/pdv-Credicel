@@ -34,7 +34,10 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
-        @media (max-width: 768px) { .content-main { flex-direction: column; } .cart-panel { width: 100% !important; height: 45%; border-left: 0; border-top: 1px solid #1e293b;} }
+        @media (max-width: 768px) { 
+            .content-main { flex-direction: column; } 
+            .cart-panel { width: 100% !important; height: 45%; border-left: 0; border-top: 1px solid #1e293b;} 
+        }
     </style>
 </head>
 <body class="text-slate-100">
@@ -123,7 +126,7 @@
     </div>
 
     <script>
-        const URL = "https://script.google.com/macros/s/AKfycbwey07xR5IRAAyP5EhkcEM-AYXKKYycxTL6HUsSwnFM1xdvhmAHkNepmTN8K_CHSAxh6Q/exec";
+        const URL = "https://script.google.com/macros/s/AKfycbxA_BmgLcUR5MeRhuM0JDa5XWbtPir8SEyrbQHi5ToxLOf-PYm7x44yIyp-vqLVEHY4iw/exec";
         let USERS = [], PRODS = [], carrito = [], vNom = "", vSuc = "", corte = {};
         
         window.onload = async () => {
@@ -290,6 +293,7 @@
                 if(!corte[x.id]) corte[x.id] = {cant: 0, total: 0};
                 corte[x.id].cant++; corte[x.id].total += x.p;
             });
+
             try {
                 const res = await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: agrupado})});
                 const result = await res.json();
@@ -322,7 +326,6 @@
             document.getElementById('loading').style.opacity = '1'; 
             try { 
                 await fetch(URL, {method: 'POST', body: JSON.stringify(data)});
-                
                 // --- IMPRIMIR TICKET DE OPERACIÓN ---
                 let detallesStr = {...data};
                 delete detallesStr.tipo; delete detallesStr.vendedor; delete detallesStr.sucursal;
@@ -366,6 +369,7 @@
             document.getElementById('sidebar').classList.toggle('closed');
             let h = "";
             let tVentas = 0, tAbonos = 0, tGastos = 0, tRecargas = 0, tReparaciones = 0, tTotalCaja = 0;
+
             for(let id in corte) {
                 let isGas = id.startsWith('GAS:');
                 let isAbono = id === 'ABONO';
@@ -377,6 +381,7 @@
                 let montoFormat = isNeg ? "-$" + Math.abs(corte[id].total).toFixed(2) : "$" + corte[id].total.toFixed(2);
                 
                 h += `<div class="flex justify-between border-b py-3 italic font-black uppercase text-xs ${colorClass} border-slate-700/50"><span>${corte[id].cant}x ${id}</span><span>${montoFormat}</span></div>`;
+                
                 if(isGas) { tGastos += Math.abs(corte[id].total); }
                 else if(isAbono) { tAbonos += corte[id].total; }
                 else if (isRecarga) { tRecargas += corte[id].total; }
@@ -407,14 +412,13 @@
                 document.getElementById('loading').style.display = 'flex';
                 try {
                     await fetch(URL, {method: 'POST', body: JSON.stringify({tipo: "VENTA", sucursal: vSuc, vendedor: vNom, items: [], corteX: t})});
-                    
                     // --- IMPRIMIR TICKET DE CORTE ---
                     let totalCajaMonto = 0;
                     for(let id in corte) { totalCajaMonto += corte[id].total; }
                     imprimirTicket('CORTE', { corte: {...corte}, totalCaja: totalCajaMonto });
                     // --------------------------------
                     
-                    localStorage.removeItem('backup_corte'); 
+                    localStorage.removeItem('backup_corte');
                     setTimeout(() => { window.location.reload(); }, 1500); // Da tiempo para que la impresora abra antes de recargar
                 } catch(e) { 
                     alert("Error al cerrar turno.");
@@ -427,7 +431,6 @@
         // --- MOTOR DEL ESCÁNER LÁSER CREDICEL ---
         // ==========================================
         const scannerInput = document.getElementById('scanner-input');
-        
         document.addEventListener('keydown', (e) => {
             const isModalOpen = document.getElementById('modal-login').style.display !== 'none' || document.getElementById('modal-cobro').style.display === 'flex';
             if (!isModalOpen && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
@@ -451,7 +454,7 @@
                 }
             }
         });
-        
+
         // ==========================================
         // --- MOTOR DE IMPRESIÓN 58MM CREDICEL ---
         // ==========================================
@@ -492,7 +495,6 @@
 
             if (tipo === 'VENTA') {
                 html += `<p><strong>TICKET DE VENTA</strong></p><div class="divider"></div><table><tr><th>CANT</th><th>DESC</th><th class="text-right">IMP</th></tr>`;
-                
                 // Agrupar items repetidos para que el ticket sea más limpio
                 let agrupados = {};
                 datos.carrito.forEach(item => {
